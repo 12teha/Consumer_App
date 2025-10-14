@@ -16,13 +16,13 @@ interface BannerProps {
   slideInterval?: number;
 }
 
-export default function Banner({ 
-  title, 
-  subtitle, 
-  image, 
+export default function Banner({
+  title,
+  subtitle,
+  image,
   images,
-  color = 'from-purple-500 to-pink-500', 
-  onClick, 
+  color = 'from-purple-500 to-pink-500',
+  onClick,
   className = "",
   size = 'large',
   autoSlide = true,
@@ -30,6 +30,11 @@ export default function Banner({
 }: BannerProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const height = size === 'large' ? 'h-40' : 'h-24';
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Banner rendered -', title, '| Image:', images?.[0] || image);
+  }, [title, images, image]);
 
   // Auto-slide functionality for multiple images
   useEffect(() => {
@@ -49,54 +54,33 @@ export default function Banner({
       onClick={onClick}
       className={`relative ${height} rounded-xl overflow-hidden cursor-pointer ${className}`}
     >
-      {images && images.length > 0 ? (
-        <div className="relative w-full h-full">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentImageIndex}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.5 }}
-              className="absolute inset-0"
-            >
-              <ImageWithFallback
-                src={images[currentImageIndex]}
-                alt={`${title} ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
-            </motion.div>
-          </AnimatePresence>
-          
-          {/* Image indicators */}
-          {images.length > 1 && size === 'large' && (
-            <div className="absolute bottom-2 right-2 flex space-x-1">
-              {images.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                    currentImageIndex === index ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Show only images without backgrounds */}
+      {images && images.length > 0 && images[0] ? (
+        <img
+          src={images[0]}
+          alt={title}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            console.error('Failed to load banner image:', images[0]);
+          }}
+          onLoad={() => {
+            console.log('Banner image loaded successfully:', images[0]);
+          }}
+        />
       ) : image ? (
-        <div className="relative w-full h-full">
-          <ImageWithFallback
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-transparent" />
-        </div>
+        <img
+          src={image}
+          alt={title}
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            console.error('Failed to load banner image:', image);
+          }}
+        />
       ) : (
         <div className={`w-full h-full bg-gradient-to-r ${color}`} />
       )}
-      
-      <div className="absolute inset-0 p-4 flex flex-col justify-center text-white">
+
+      <div className="absolute inset-0 p-4 flex flex-col justify-center text-white z-20 pointer-events-none">
         <motion.h3 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

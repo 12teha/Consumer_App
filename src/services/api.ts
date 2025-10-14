@@ -202,6 +202,40 @@ class ApiService {
     }
     return data;
   }
+
+  async getBanners() {
+    // Use proxy in development to avoid CORS issues, direct URL in production
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const BANNER_URL = isDevelopment
+      ? '/api/banners/banners.json'  // Proxy endpoint for development
+      : 'https://d24rozqnh2m4pk.cloudfront.net/banners/banners.json';  // Direct URL for production
+
+    const cacheKey = this.getCacheKey('banners');
+    const cached = this.getCachedData(cacheKey);
+
+    if (cached) {
+      console.log('Using cached banners');
+      return cached;
+    }
+
+    try {
+      console.log('Fetching banners from:', BANNER_URL);
+      const response = await fetch(BANNER_URL);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch banners: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Banners fetched successfully:', data);
+
+      this.setCachedData(cacheKey, data);
+      return data;
+    } catch (error) {
+      console.error('Error fetching banners:', error);
+      throw error;
+    }
+  }
 }
 
 export const apiService = new ApiService();

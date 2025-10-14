@@ -33,7 +33,6 @@ interface HomeScreenProps {
 
 const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, onNavigate, onLikeCountChange }: HomeScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [activeCategory, setActiveCategory] = useState('All');
   const [showAdVideo, setShowAdVideo] = useState(false);
   const [adVideoSide, setAdVideoSide] = useState<'left' | 'right'>('left');
@@ -58,11 +57,15 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
   const [loadingOffers, setLoadingOffers] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [offersError, setOffersError] = useState<string | null>(null);
+  const [banners, setBanners] = useState<Array<{ image: string; link: string }>>([]);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [loadingBanners, setLoadingBanners] = useState(false);
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Load initial data
   useEffect(() => {
     loadInitialData();
+    loadBanners();
   }, []);
 
   // Load offers when category or location changes
@@ -246,6 +249,48 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     }
   };
 
+  const loadBanners = async () => {
+    try {
+      setLoadingBanners(true);
+      console.log('🎯 Loading banners from API...');
+      const response = await apiService.getBanners();
+      console.log('🎯 Banners API Response:', response);
+
+      // API returns array like: [{ image: "url", link: "url" }, ...]
+      const bannerData: Array<{ image: string; link: string }> = [];
+
+      if (Array.isArray(response)) {
+        response.forEach((item: any) => {
+          // New format: { image: "url", link: "url" }
+          if (item.image) {
+            bannerData.push({
+              image: item.image,
+              link: item.link || ''
+            });
+          }
+        });
+      }
+
+      console.log('🎯 Extracted banner data:', bannerData);
+      console.log('🎯 Number of banners:', bannerData.length);
+
+      if (bannerData.length > 0) {
+        console.log('✅ Setting banners state with:', bannerData);
+        setBanners(bannerData);
+        console.log('✅ Banners state updated!');
+      } else {
+        console.warn('⚠️ No banners from API - empty array');
+        setBanners([]);
+      }
+    } catch (error) {
+      console.error('❌ Error loading banners:', error);
+      setBanners([]);
+    } finally {
+      setLoadingBanners(false);
+      console.log('🎯 loadingBanners set to false');
+    }
+  };
+
   const handleLocationSet = (location: any) => {
     // Save location to localStorage for persistence across refreshes
     localStorage.setItem('userLocation', JSON.stringify(location));
@@ -288,58 +333,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     }
   };
 
-  const banners = React.useMemo(() => [
-    { 
-      id: 1, 
-      title: 'New Year Mega Sale', 
-      subtitle: 'Up to 70% off on everything', 
-      images: [
-        'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600',
-        'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600',
-        'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=600'
-      ],
-      color: 'from-red-500 to-pink-600', 
-      offer: offers[0] 
-    },
-    { 
-      id: 2, 
-      title: 'Flash Weekend Deal', 
-      subtitle: 'Limited time offers', 
-      images: [
-        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600',
-        'https://images.unsplash.com/photo-1594398028856-f253a046f417?w=600',
-        'https://images.unsplash.com/photo-1575111507952-2d4f371374f5?w=600'
-      ],
-      color: 'from-blue-500 to-purple-600', 
-      offer: offers[1] 
-    },
-    { 
-      id: 3, 
-      title: 'Special Discounts', 
-      subtitle: 'Exclusive member offers', 
-      images: [
-        'https://images.unsplash.com/photo-1571019613914-85f342c6a11e?w=600',
-        'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600',
-        'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600'
-      ],
-      color: 'from-green-500 to-teal-600', 
-      offer: offers[2] 
-    }
-  ], [offers]);
 
-  const adBanners = React.useMemo(() => [
-    { id: 1, title: 'Fashion Week Special', subtitle: '60% off all brands', image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200', color: 'from-pink-500 to-purple-600' },
-    { id: 2, title: 'Electronics Bonanza', subtitle: 'Latest gadgets discounted', image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200', color: 'from-blue-500 to-cyan-600' },
-    { id: 3, title: 'Food Festival', subtitle: 'Order now, save big', image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200', color: 'from-orange-500 to-red-600' }
-  ], []);
-
-  // Auto-rotate banners
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
-    }, 5000); // Increased interval to reduce frequency
-    return () => clearInterval(interval);
-  }, [banners.length]);
 
   // Show ad videos only first 2 times - optimized
   useEffect(() => {
@@ -359,7 +353,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
   // User inactivity detection for auto-sliding - optimized
   useEffect(() => {
     let inactivityTimeout: NodeJS.Timeout;
-    
+
     const resetTimer = () => {
       setUserInactive(false);
       clearTimeout(inactivityTimeout);
@@ -369,7 +363,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     };
 
     const handleActivity = () => resetTimer();
-    
+
     // Use passive listeners for better performance
     document.addEventListener('touchstart', handleActivity, { passive: true });
     document.addEventListener('click', handleActivity, { passive: true });
@@ -381,6 +375,17 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
       clearTimeout(inactivityTimeout);
     };
   }, []); // Simplified dependency array
+
+  // Auto-scroll banners every 3 seconds
+  useEffect(() => {
+    if (banners.length === 0) return;
+
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }, 3000); // Auto scroll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [banners.length]);
 
   const handleSearch = React.useCallback((query: string) => {
     try {
@@ -645,80 +650,91 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
           </motion.div>
         )}
 
-        {/* Sliding Banners */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mx-4 my-4"
-        >
-          <div className="relative h-40 rounded-xl overflow-hidden mb-4">
-            {banners.map((banner, index) => (
-              <Banner
-                key={banner.id}
-                title={banner.title}
-                subtitle={banner.subtitle}
-                images={banner.images}
-                color={banner.color}
-                onClick={() => onNavigate('offerDetails', { offer: banner.offer })}
-                className={`absolute inset-0 ${
-                  currentBannerIndex === index ? 'opacity-100' : 'opacity-0'
-                } transition-opacity duration-500`}
-                size="large"
-              />
-            ))}
-            
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {banners.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-2 h-2 rounded-full ${
-                    currentBannerIndex === index ? 'bg-white' : 'bg-white/50'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
+        {/* Auto-Scrollable Banners Section - Below Categories */}
+        {!showSearchResults && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="px-4 py-3 bg-white"
+          >
+            {loadingBanners ? (
+              <div className="w-full h-48 rounded-xl bg-gray-200 animate-pulse"></div>
+            ) : banners.length > 0 ? (
+              <div className="relative w-full rounded-xl overflow-hidden shadow-lg cursor-pointer" style={{ height: '200px', minHeight: '200px' }}>
+                {/* Banner Images */}
+                {banners.map((banner, index) => (
+                  <div
+                    key={`banner-${index}`}
+                    className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors duration-300"
+                    style={{
+                      opacity: currentBannerIndex === index ? 1 : 0,
+                      zIndex: currentBannerIndex === index ? 10 : 0,
+                      transition: 'opacity 0.7s ease-in-out',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      console.log(`🖱️ Banner ${index + 1} clicked`);
+                      console.log(`🔗 Banner link:`, banner.link);
 
-          {/* 2-3 Advertisement Banners - Hidden */}
-          {/* <div className="grid grid-cols-3 gap-2 mb-4">
-            {adBanners.map((banner) => (
-              <Banner
-                key={banner.id}
-                title={banner.title}
-                subtitle={banner.subtitle}
-                image={banner.image}
-                color={banner.color}
-                onClick={() => onNavigate('offerDetails', { offer: offers[0] })}
-                size="small"
-              />
-            ))}
-          </div> */}
+                      // If banner has a link, open it in new tab
+                      if (banner.link && banner.link.trim() !== '') {
+                        window.open(banner.link, '_blank', 'noopener,noreferrer');
+                      } else {
+                        // Fallback: Show all offers when banner is clicked
+                        if (offers.length > 0) {
+                          onNavigate('allOffers', { title: 'Featured Offers', offers: offers });
+                        }
+                      }
+                    }}
+                  >
+                    <img
+                      src={banner.image}
+                      alt={`Banner ${index + 1}`}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        objectFit: 'contain',
+                        display: 'block',
+                        pointerEvents: 'none'
+                      }}
+                      onError={(e) => {
+                        console.error('❌ Failed to load banner:', banner.image);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                      onLoad={(e) => {
+                        console.log(`✅ Banner ${index + 1} loaded and visible`);
+                        e.currentTarget.style.display = 'block';
+                      }}
+                    />
+                  </div>
+                ))}
 
-          {/* Enhanced Quick Action Buttons - Hidden */}
-          {/* <div className="grid grid-cols-3 gap-2">
-            <Banner
-              title="Curated for you"
-              subtitle="Personalized"
-              color="from-purple-500 to-pink-500"
-              onClick={() => onNavigate('curatedOffers')}
-              size="small"
-            />
-            <Banner
-              title="Ending Soon"
-              subtitle="Limited Time"
-              color="from-red-500 to-orange-500"
-              onClick={() => setActiveCategory('Ending')}
-              size="small"
-            />
-            <Banner
-              title="Stores"
-              subtitle="Find Nearby"
-              color="from-blue-500 to-teal-500"
-              onClick={() => onNavigate('nearbyStores')}
-              size="small"
-            />
-          </div> */}
-        </motion.div>
+                {/* Banner Indicators */}
+                {banners.length > 1 && (
+                  <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2" style={{ zIndex: 20 }}>
+                    {banners.map((_, index) => (
+                      <button
+                        key={`indicator-${index}`}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent banner click when clicking indicator
+                          setCurrentBannerIndex(index);
+                        }}
+                        className={`rounded-full transition-all ${
+                          currentBannerIndex === index ? 'bg-white w-6 h-2' : 'bg-white/50 w-2 h-2'
+                        }`}
+                        aria-label={`Go to banner ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-full h-48 rounded-xl bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 flex items-center justify-center shadow-lg">
+                <p className="text-white text-xl font-bold">Welcome to OfferBeez!</p>
+              </div>
+            )}
+          </motion.div>
+        )}
 
         {/* Auto-Sliding Offers Section */}
         <motion.div

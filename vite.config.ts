@@ -56,5 +56,13 @@
     server: {
       port: 3000,
       open: true,
+      proxy: {
+        '/api/banners': {
+          target: 'https://d24rozqnh2m4pk.cloudfront.net',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/banners/, '/banners'),
+          secure: false,
+        },
+      },
     },
   });
