@@ -215,11 +215,11 @@ class ApiService {
   }
 
   async getBanners() {
-    // Use proxy in development to avoid CORS issues, direct URL in production
+    // Use proxy in development to avoid CORS issues, direct S3 URL in production
     const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const BANNER_URL = isDevelopment
       ? '/api/banners/banners.json'  // Proxy endpoint for development
-      : 'https://d24rozqnh2m4pk.cloudfront.net/banners/banners.json';  // Direct URL for production
+      : 'https://ofb-banners.s3.ap-south-1.amazonaws.com/banners.json';  // Direct S3 URL for production
 
     const cacheKey = this.getCacheKey('banners');
     const cached = this.getCachedData(cacheKey);

@@ -58,9 +58,9 @@
       open: true,
       proxy: {
         '/api/banners': {
-          target: 'https://d24rozqnh2m4pk.cloudfront.net',
+          target: 'https://ofb-banners.s3.ap-south-1.amazonaws.com',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/banners/, '/banners'),
+          rewrite: (path) => path.replace(/^\/api\/banners/, ''),
           secure: false,
         },
       },

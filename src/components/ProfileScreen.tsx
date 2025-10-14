@@ -18,10 +18,10 @@ interface ProfileScreenProps {
 export default function ProfileScreen({ username, likedOffersCount, onBack, onNavigate }: ProfileScreenProps) {
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-  const profileStats = [
-    { label: 'Liked Offers', value: likedOffersCount.toString(), color: 'text-red-600', action: () => onNavigate('likedOffers') },
+  const profileStats = [];
+   /* { label: 'Liked Offers', value: likedOffersCount.toString(), color: 'text-red-600', action: () => onNavigate('likedOffers') },
     { label: 'Wishlist Items', value: '8', color: 'text-purple-600', action: () => onNavigate('wishlist') },
-  ];
+  ];*/    
 
   const menuItems = [
     {
@@ -31,20 +31,20 @@ export default function ProfileScreen({ username, likedOffersCount, onBack, onNa
       subtitle: 'Edit your personal information',
       action: () => onNavigate('profileDetails')
     },
-    {
+    /*{
       id: 'location',
       icon: MapPin,
       title: 'Location',
       subtitle: 'Manage your saved locations',
       action: () => onNavigate('location')
-    },
-    {
+    },*/
+    /*{
       id: 'wishlist',
       icon: Heart,
       title: 'Wishlist',
       subtitle: 'View your saved offers',
       action: () => onNavigate('wishlist')
-    },
+    },*/
     {
       id: 'faq',
       icon: HelpCircle,
@@ -59,20 +59,20 @@ export default function ProfileScreen({ username, likedOffersCount, onBack, onNa
       subtitle: 'Read our terms of service',
       action: () => onNavigate('terms')
     },
-    {
+    /*{
       id: 'business',
       icon: Building2,
       title: 'Become a Business Partner',
       subtitle: 'Join our business portal',
       action: () => onNavigate('business')
-    },
-    {
+    },*/
+    /*{
       id: 'feedback',
       icon: MessageSquare,
       title: 'Feedback',
       subtitle: 'Share your experience with us',
       action: () => onNavigate('feedback')
-    },
+    },*/
   ];
 
   const supportInfo = [

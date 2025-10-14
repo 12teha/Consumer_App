@@ -546,8 +546,8 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
             className="flex items-center justify-center"
           >
             <img
-              src="/location logo- 2.png"
-              alt="Logo"
+              src="/512pxlogo-1.png"
+              alt="OfferBeez Logo"
               className="h-16 w-auto object-contain"
             />
           </motion.div>

@@ -79,11 +79,11 @@ const OfferCard = React.memo(function OfferCard({
         className={`bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer ${className}`}
       >
         <div className="flex">
-          <div className="relative w-24 h-24">
+          <div className="relative w-32 h-32 bg-gray-50 flex-shrink-0">
             <ImageWithFallback
               src={offer.image}
               alt={offer.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
             />
             <div className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded">
               {offer.discount}% OFF
@@ -138,11 +138,11 @@ const OfferCard = React.memo(function OfferCard({
       onClick={onClick}
       className={`bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer min-w-[200px] ${className}`}
     >
-      <div className="relative">
+      <div className="relative bg-gray-50">
         <ImageWithFallback
           src={offer.image}
           alt={offer.title}
-          className="w-full h-32 object-cover"
+          className="w-full h-40 object-contain"
         />
         <div className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
           {offer.discount}% OFF
