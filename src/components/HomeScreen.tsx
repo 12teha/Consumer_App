@@ -187,7 +187,24 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
       });
 
       console.log('API Response:', response);
-      const newOffers = (response.offers || []).map((offer: any) => {
+      console.log('Response type:', typeof response);
+      console.log('Response keys:', response ? Object.keys(response) : 'null');
+
+      // Handle different response structures more robustly
+      let offersArray = [];
+      if (Array.isArray(response)) {
+        offersArray = response;
+      } else if (response && Array.isArray(response.offers)) {
+        offersArray = response.offers;
+      } else if (response && Array.isArray(response.data)) {
+        offersArray = response.data;
+      } else if (response && response.data && Array.isArray(response.data.offers)) {
+        offersArray = response.data.offers;
+      }
+
+      console.log('Extracted offers array length:', offersArray.length);
+
+      const newOffers = (offersArray || []).map((offer: any) => {
         // Get the image URL from various possible field names
         let imageUrl = offer.imagesUrl || offer.offerImage || offer.offer_image || offer.image || '';
 
@@ -240,9 +257,24 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
       setPage(pageNum);
     } catch (error) {
       console.error('Error loading offers:', error);
+      console.error('Error details:', error instanceof Error ? error.message : String(error));
+
       if (pageNum === 1) {
         setOffers([]);
-        setOffersError('Failed to load offers. Please try again.');
+
+        // Provide more specific error messages
+        let errorMessage = 'Failed to load offers. Please try again.';
+        if (error instanceof Error) {
+          if (error.message.includes('Authentication failed')) {
+            errorMessage = 'Please log in again to view offers.';
+          } else if (error.message.includes('Network')) {
+            errorMessage = 'Network error. Please check your connection.';
+          } else if (error.message.includes('401')) {
+            errorMessage = 'Session expired. Please log in again.';
+          }
+        }
+
+        setOffersError(errorMessage);
       }
     } finally {
       setLoadingOffers(false);

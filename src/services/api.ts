@@ -189,18 +189,29 @@ class ApiService {
     const queryString = queryParams.toString();
     const endpoint = `/user/offer${queryString ? `?${queryString}` : ''}`;
 
+    console.log('🔍 getOffers called with params:', params);
+    console.log('🔍 Full endpoint:', endpoint);
+    console.log('🔍 Has token:', !!this.token);
+
     // Cache offers for shorter duration (2 minutes) as they change more frequently
     const cacheKey = this.getCacheKey(endpoint, params);
     const cached = this.getCachedData(cacheKey);
     if (cached && params?.page === 1) {
+      console.log('✅ Using cached offers');
       return cached;
     }
 
-    const data = await this.makeRequest(endpoint);
-    if (params?.page === 1) {
-      this.setCachedData(cacheKey, data);
+    try {
+      const data = await this.makeRequest(endpoint);
+      console.log('✅ Offers fetched successfully:', data);
+      if (params?.page === 1) {
+        this.setCachedData(cacheKey, data);
+      }
+      return data;
+    } catch (error) {
+      console.error('❌ Failed to fetch offers:', error);
+      throw error;
     }
-    return data;
   }
 
   async getBanners() {
