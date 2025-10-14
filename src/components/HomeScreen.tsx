@@ -692,12 +692,12 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
             {loadingBanners ? (
               <div className="w-full h-48 rounded-xl bg-gray-200 animate-pulse"></div>
             ) : banners.length > 0 ? (
-              <div className="relative w-full rounded-xl overflow-hidden shadow-lg cursor-pointer" style={{ height: '200px', minHeight: '200px' }}>
+              <div className="relative w-full rounded-xl overflow-hidden shadow-lg cursor-pointer" style={{ height: '180px', minHeight: '180px', maxHeight: '180px' }}>
                 {/* Banner Images */}
                 {banners.map((banner, index) => (
                   <div
                     key={`banner-${index}`}
-                    className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 transition-colors duration-300"
+                    className="absolute top-0 left-0 w-full h-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300"
                     style={{
                       opacity: currentBannerIndex === index ? 1 : 0,
                       zIndex: currentBannerIndex === index ? 10 : 0,
@@ -719,23 +719,15 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                       }
                     }}
                   >
-                    <img
+                    <ImageWithFallback
                       src={banner.image}
                       alt={`Banner ${index + 1}`}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: 'contain',
-                        display: 'block',
-                        pointerEvents: 'none'
-                      }}
-                      onError={(e) => {
+                      className="w-full h-full object-cover"
+                      onError={() => {
                         console.error('❌ Failed to load banner:', banner.image);
-                        e.currentTarget.style.display = 'none';
                       }}
-                      onLoad={(e) => {
-                        console.log(`✅ Banner ${index + 1} loaded and visible`);
-                        e.currentTarget.style.display = 'block';
+                      onLoad={() => {
+                        console.log(`✅ Banner ${index + 1} loaded successfully`);
                       }}
                     />
                   </div>
