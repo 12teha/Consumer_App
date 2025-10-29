@@ -41,6 +41,7 @@ export default function AllOffersScreen({
     { label: 'Price: Low to High', value: 'price_asc' },
     { label: 'Price: High to Low', value: 'price_desc' }
   ];
+  
 
   const handleLikeOffer = (offerId: number, liked: boolean) => {
     setLikedOffers(prev => {
@@ -99,16 +100,21 @@ export default function AllOffersScreen({
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white px-4 py-3 shadow-sm"
-      >
-        <div className="flex items-center justify-between mb-3">
-          <BackButton onClick={onBack} />
-          <h1 className="text-lg font-bold text-gray-900">{title}</h1>
-          <div className="w-8" />
-        </div>
+     <motion.div
+  initial={{ opacity: 0, y: -50 }}
+  animate={{ opacity: 1, y: 0 }}
+  className="bg-white px-4 py-3 shadow-sm"
+>
+  <div className="flex items-center justify-between mb-3">
+    <button 
+      onClick={onBack}
+      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+    >
+      <ArrowLeft className="w-5 h-5 text-gray-600" />
+    </button>
+    <h1 className="text-lg font-bold text-gray-900">{title}</h1>
+    <div className="w-8" /> {/* Spacer for balance */}
+  </div>
 
         {/* Search Bar */}
         <div className="relative mb-3">
@@ -123,7 +129,7 @@ export default function AllOffersScreen({
         </div>
 
         {/* Filters */}
-        <div className="flex space-x-3 overflow-x-auto pb-2">
+        {/* <div className="flex space-x-3 overflow-x-auto pb-2">
           {categories.map((category) => (
             <button
               key={category}
@@ -137,11 +143,11 @@ export default function AllOffersScreen({
               {category}
             </button>
           ))}
-        </div>
+        </div> */}
       </motion.div>
 
       {/* Sort Options */}
-      <div className="bg-white px-4 py-2 border-b border-gray-100">
+      {/* <div className="bg-white px-4 py-2 border-b border-gray-100">
         <div className="flex items-center space-x-2">
           <Filter className="w-4 h-4 text-gray-500" />
           <span className="text-sm text-gray-600">Sort by:</span>
@@ -157,7 +163,7 @@ export default function AllOffersScreen({
             ))}
           </select>
         </div>
-      </div>
+      </div> */}
 
       {/* Results Count */}
       <div className="bg-white px-4 py-2 border-b border-gray-100">
@@ -218,3 +224,5 @@ export default function AllOffersScreen({
     </div>
   );
 }
+
+

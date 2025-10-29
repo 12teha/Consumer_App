@@ -1,23 +1,37 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useState } from "react";
+import { motion } from "motion/react";
 import {
-  ArrowLeft, Heart, Share2, Navigation, Star, Clock,
-  MapPin, Phone, Globe, ChevronLeft, ChevronRight
-} from 'lucide-react';
-import { Button } from './ui/button';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import DirectionsMap from './DirectionsMap';
+  ArrowLeft,
+  Heart,
+  Share2,
+  Navigation,
+  Star,
+  Clock,
+  MapPin,
+  Phone,
+  Globe,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { Button } from "./ui/button";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
+import DirectionsMap from "./DirectionsMap";
 
 interface OfferDetailsScreenProps {
   offer: any;
   onBack: () => void;
 }
 
-export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreenProps) {
+export default function OfferDetailsScreen({
+  offer,
+  onBack,
+}: OfferDetailsScreenProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
-  const [calculatedDistance, setCalculatedDistance] = useState<string | null>(null);
+  const [calculatedDistance, setCalculatedDistance] = useState<string | null>(
+    null
+  );
 
   // Extract business data from nested structure
   const business = offer.business || {};
@@ -25,22 +39,36 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
   const businessAddress = business.address || offer.address;
   const businessLatitude = business.latitude || offer.latitude;
   const businessLongitude = business.longitude || offer.longitude;
-  const businessCategory = business.businessCategory?.categoryName || offer.category;
+  const businessCategory =
+    business.businessCategory?.categoryName || offer.category;
 
   // Debug: Log offer data to see what fields are available
   React.useEffect(() => {
-    console.log('📊 Offer Data:', offer);
-    console.log('📊 Business Data:', business);
-    console.log('📍 Location:', businessAddress, businessLatitude, businessLongitude);
+    console.log("📊 Offer Data:", offer);
+    console.log("📊 Business Data:", business);
+    console.log(
+      "📍 Location:",
+      businessAddress,
+      businessLatitude,
+      businessLongitude
+    );
   }, [offer]);
 
   // Use all uploaded images from the offer
   // API returns 'imagesUrl' array (new format) or 'photos'/'image' (old format)
   const offerImages = React.useMemo(() => {
-    if (offer.imagesUrl && Array.isArray(offer.imagesUrl) && offer.imagesUrl.length > 0) {
+    if (
+      offer.imagesUrl &&
+      Array.isArray(offer.imagesUrl) &&
+      offer.imagesUrl.length > 0
+    ) {
       // Use the imagesUrl array if available (latest API format)
       return offer.imagesUrl;
-    } else if (offer.photos && Array.isArray(offer.photos) && offer.photos.length > 0) {
+    } else if (
+      offer.photos &&
+      Array.isArray(offer.photos) &&
+      offer.photos.length > 0
+    ) {
       // Use the photos array if available (older format)
       return offer.photos;
     } else if (offer.image) {
@@ -69,8 +97,9 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
           const a =
             Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(userLat * (Math.PI / 180)) *
-            Math.cos(businessLat * (Math.PI / 180)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+              Math.cos(businessLat * (Math.PI / 180)) *
+              Math.sin(dLon / 2) *
+              Math.sin(dLon / 2);
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           const distance = R * c;
 
@@ -82,7 +111,7 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
           }
         },
         (error) => {
-          console.log('Could not get user location:', error);
+          console.log("Could not get user location:", error);
           // Fallback to offer.distance if available
           setCalculatedDistance(offer.distance || null);
         }
@@ -99,8 +128,13 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
       setShowDirections(true);
     } else {
       // Fallback to Google Maps with address
-      const query = encodeURIComponent(businessAddress || businessName || offer.title);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+      const query = encodeURIComponent(
+        businessAddress || businessName || offer.title
+      );
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${query}`,
+        "_blank"
+      );
     }
   };
 
@@ -112,17 +146,27 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
         animate={{ opacity: 1, y: 0 }}
         className="bg-white px-4 py-3 shadow-sm flex items-center justify-between"
       >
-        <button onClick={onBack} className="p-2 -ml-2">
+        <button
+          onClick={onBack}
+          className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+        >
           <ArrowLeft className="w-6 h-6 text-gray-600" />
         </button>
         <h1 className="text-lg font-semibold text-gray-900">Offer Details</h1>
         <div className="flex items-center space-x-3">
-          <button onClick={() => setIsWishlisted(!isWishlisted)}>
-            <Heart className={`w-6 h-6 ${isWishlisted ? 'text-red-500 fill-current' : 'text-gray-400'}`} />
-          </button>
-          <button>
+          {/* <button
+            onClick={() => setIsWishlisted(!isWishlisted)}
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <Heart
+              className={`w-6 h-6 ${
+                isWishlisted ? "text-red-500 fill-current" : "text-gray-400"
+              }`}
+            />
+          </button> */}
+          {/* <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
             <Share2 className="w-6 h-6 text-gray-400" />
-          </button>
+          </button> */}
         </div>
       </motion.div>
 
@@ -134,27 +178,35 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
           animate={{ opacity: 1 }}
           className="relative h-64 bg-gray-200"
         >
-          <ImageWithFallback
-            src={offerImages[currentImageIndex]}
-            alt={offer.title}
-            className="w-full h-full object-cover"
-          />
-          
+        
+      <div className="relative w-32 h-48 rounded-xl overflow-hidden bg-white flex items-center justify-center">
+       <ImageWithFallback
+        src={offer.image}
+        alt={offer.title}
+       className="w-auto h-full object-contain"
+        />
+      </div>
+
+
           {/* Navigation Arrows */}
           {offerImages.length > 1 && (
             <>
               <button
-                onClick={() => setCurrentImageIndex((prev) => 
-                  prev === 0 ? offerImages.length - 1 : prev - 1
-                )}
+                onClick={() =>
+                  setCurrentImageIndex((prev) =>
+                    prev === 0 ? offerImages.length - 1 : prev - 1
+                  )
+                }
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
-                onClick={() => setCurrentImageIndex((prev) => 
-                  prev === offerImages.length - 1 ? 0 : prev + 1
-                )}
+                onClick={() =>
+                  setCurrentImageIndex((prev) =>
+                    prev === offerImages.length - 1 ? 0 : prev + 1
+                  )
+                }
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
               >
                 <ChevronRight className="w-5 h-5" />
@@ -168,7 +220,7 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
               <div
                 key={index}
                 className={`w-2 h-2 rounded-full ${
-                  currentImageIndex === index ? 'bg-white' : 'bg-white/50'
+                  currentImageIndex === index ? "bg-white" : "bg-white/50"
                 }`}
               />
             ))}
@@ -190,7 +242,9 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
         >
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900">{offer.title || businessName}</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                {offer.title || businessName}
+              </h2>
               {businessCategory && (
                 <span className="inline-block mt-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
                   {businessCategory}
@@ -201,9 +255,13 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
               {/* Business Information - Always visible */}
               {businessName && (
                 <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                  <p className="text-sm font-semibold text-gray-900 mb-1">🏢 {businessName}</p>
+                  <p className="text-sm font-semibold text-gray-900 mb-1">
+                    🏢 {businessName}
+                  </p>
                   {businessCategory && (
-                    <p className="text-xs text-blue-600 mb-1">📂 {businessCategory}</p>
+                    <p className="text-xs text-blue-600 mb-1">
+                      📂 {businessCategory}
+                    </p>
                   )}
                 </div>
               )}
@@ -211,7 +269,9 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
             {offer.rating && (
               <div className="flex items-center space-x-1 ml-3">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span className="font-semibold text-gray-900">{offer.rating}</span>
+                <span className="font-semibold text-gray-900">
+                  {offer.rating}
+                </span>
               </div>
             )}
           </div>
@@ -221,19 +281,27 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
             <div className="flex items-center justify-between mb-4 p-3 bg-green-50 rounded-lg">
               <div className="flex items-center space-x-3">
                 {offer.discountedPrice && (
-                  <span className="text-2xl font-bold text-green-600">₹{offer.discountedPrice}</span>
+                  <span className="text-2xl font-bold text-green-600">
+                    ₹{offer.discountedPrice}
+                  </span>
                 )}
                 {offer.originalPrice && (
-                  <span className="text-lg text-gray-400 line-through">₹{offer.originalPrice}</span>
+                  <span className="text-lg text-gray-400 line-through">
+                    ₹{offer.originalPrice}
+                  </span>
                 )}
               </div>
-              {offer.originalPrice && offer.discountedPrice && offer.originalPrice > offer.discountedPrice && (
-                <div className="text-right">
-                  <p className="text-sm font-medium text-green-600">
-                    Save ₹{parseFloat(offer.originalPrice) - parseFloat(offer.discountedPrice)}
-                  </p>
-                </div>
-              )}
+              {offer.originalPrice &&
+                offer.discountedPrice &&
+                offer.originalPrice > offer.discountedPrice && (
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-green-600">
+                      Save ₹
+                      {parseFloat(offer.originalPrice) -
+                        parseFloat(offer.discountedPrice)}
+                    </p>
+                  </div>
+                )}
             </div>
           )}
 
@@ -244,9 +312,13 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
               <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
               <div className="flex-1">
                 <p className="font-medium text-gray-900">📍 Location</p>
-                <p className="text-gray-600 text-xs mt-1">{businessAddress || 'Location not specified'}</p>
+                <p className="text-gray-600 text-xs mt-1">
+                  {businessAddress || "Location not specified"}
+                </p>
                 {calculatedDistance && (
-                  <p className="text-blue-600 text-xs mt-1 font-semibold">🚶 {calculatedDistance} away from you</p>
+                  <p className="text-blue-600 text-xs mt-1 font-semibold">
+                    🚶 {calculatedDistance} away from you
+                  </p>
                 )}
               </div>
             </div>
@@ -256,26 +328,33 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
               <div className="flex items-start space-x-2 text-sm">
                 <Clock className="w-4 h-4 text-orange-600 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">⏰ Validity Period</p>
+                  <p className="font-medium text-gray-900">
+                    ⏰ Validity Period
+                  </p>
                   {offer.startDateTime && (
                     <p className="text-gray-600 text-xs mt-1">
-                      Starts: {new Date(offer.startDateTime).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+                      Starts:{" "}
+                      {new Date(offer.startDateTime).toLocaleDateString(
+                        "en-IN",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
                     </p>
                   )}
                   {offer.endDateTime && (
                     <p className="text-orange-600 text-xs mt-1 font-medium">
-                      Expires: {new Date(offer.endDateTime).toLocaleDateString('en-IN', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
+                      Expires:{" "}
+                      {new Date(offer.endDateTime).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
                       })}
                     </p>
                   )}
@@ -295,7 +374,7 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
                     <button
                       onClick={() => {
                         navigator.clipboard.writeText(offer.offerCode);
-                        alert('Code copied!');
+                        alert("Code copied!");
                       }}
                       className="text-xs text-blue-600 hover:underline"
                     >
@@ -313,12 +392,18 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
                 <div className="flex-1">
                   <p className="font-medium text-gray-700">Contact</p>
                   {offer.businessPhone && (
-                    <a href={`tel:${offer.businessPhone}`} className="text-blue-600 hover:underline block">
+                    <a
+                      href={`tel:${offer.businessPhone}`}
+                      className="text-blue-600 hover:underline block"
+                    >
                       📞 {offer.businessPhone}
                     </a>
                   )}
                   {offer.businessEmail && (
-                    <a href={`mailto:${offer.businessEmail}`} className="text-blue-600 hover:underline block mt-1">
+                    <a
+                      href={`mailto:${offer.businessEmail}`}
+                      className="text-blue-600 hover:underline block mt-1"
+                    >
                       📧 {offer.businessEmail}
                     </a>
                   )}
@@ -342,7 +427,11 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
                 <div className="flex-1">
                   <p className="font-medium text-gray-700">Website</p>
                   <a
-                    href={offer.website.startsWith('http') ? offer.website : `https://${offer.website}`}
+                    href={
+                      offer.website.startsWith("http")
+                        ? offer.website
+                        : `https://${offer.website}`
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:underline"
@@ -393,14 +482,18 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
             </p>
           ) : (
             <p className="text-gray-600 text-sm leading-relaxed mb-3">
-              Enjoy our specially crafted {offer.category?.toLowerCase() || 'exclusive'} offer with premium quality and exceptional service.
+              Enjoy our specially crafted{" "}
+              {offer.category?.toLowerCase() || "exclusive"} offer with premium
+              quality and exceptional service.
             </p>
           )}
 
           {/* Terms and Conditions - Use 'toc' field from API */}
           {offer.toc && (
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <h4 className="font-medium text-gray-900 text-sm mb-2">⚠️ Terms & Conditions</h4>
+              <h4 className="font-medium text-gray-900 text-sm mb-2">
+                ⚠️ Terms & Conditions
+              </h4>
               <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
                 {offer.toc}
               </p>
@@ -408,32 +501,44 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
           )}
 
           {/* Additional Details */}
-          {(offer.maxUsagePerUser || offer.minPurchaseAmount || offer.maxDiscountAmount) && (
+          {(offer.maxUsagePerUser ||
+            offer.minPurchaseAmount ||
+            offer.maxDiscountAmount) && (
             <div className="mt-4 space-y-2">
-              <h4 className="font-medium text-gray-900 text-sm">Offer Limits</h4>
+              <h4 className="font-medium text-gray-900 text-sm">
+                Offer Limits
+              </h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {offer.maxUsagePerUser && (
                   <div className="p-2 bg-gray-50 rounded">
                     <p className="text-gray-500">Usage Limit</p>
-                    <p className="font-medium text-gray-900">{offer.maxUsagePerUser} times per user</p>
+                    <p className="font-medium text-gray-900">
+                      {offer.maxUsagePerUser} times per user
+                    </p>
                   </div>
                 )}
                 {offer.minPurchaseAmount && (
                   <div className="p-2 bg-gray-50 rounded">
                     <p className="text-gray-500">Min. Purchase</p>
-                    <p className="font-medium text-gray-900">₹{offer.minPurchaseAmount}</p>
+                    <p className="font-medium text-gray-900">
+                      ₹{offer.minPurchaseAmount}
+                    </p>
                   </div>
                 )}
                 {offer.maxDiscountAmount && (
                   <div className="p-2 bg-gray-50 rounded">
                     <p className="text-gray-500">Max. Discount</p>
-                    <p className="font-medium text-gray-900">₹{offer.maxDiscountAmount}</p>
+                    <p className="font-medium text-gray-900">
+                      ₹{offer.maxDiscountAmount}
+                    </p>
                   </div>
                 )}
                 {offer.totalRedemptions !== undefined && (
                   <div className="p-2 bg-gray-50 rounded">
                     <p className="text-gray-500">Total Redeemed</p>
-                    <p className="font-medium text-gray-900">{offer.totalRedemptions} times</p>
+                    <p className="font-medium text-gray-900">
+                      {offer.totalRedemptions} times
+                    </p>
                   </div>
                 )}
               </div>
@@ -450,8 +555,8 @@ export default function OfferDetailsScreen({ offer, onBack }: OfferDetailsScreen
           destination={{
             latitude: businessLatitude,
             longitude: businessLongitude,
-            name: offer.title || businessName || 'Business Location',
-            address: businessAddress || 'Address not available'
+            name: offer.title || businessName || "Business Location",
+            address: businessAddress || "Address not available",
           }}
         />
       )}
