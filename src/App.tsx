@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'motion/react';
 import AppNavigator from './components/AppNavigator';
@@ -98,6 +99,7 @@ export default function App() {
       return prev;
     });
   }, []);
+
 
   const handlePhoneComplete = useCallback((phone: string) => {
     setPhoneNumber(phone);

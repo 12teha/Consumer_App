@@ -219,13 +219,28 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
         transition={{ delay: 0.8 }}
         className="mt-8"
       >
-        <Button
+        {/* <Button
           onClick={handleContinue}
           disabled={!canContinue}
           className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
             canContinue
               ? 'bg-white text-purple-600 hover:bg-gray-50 shadow-lg'
               : 'bg-white/30 text-white/50 cursor-not-allowed'
+          }`}
+        >
+          <span>
+            {canContinue ? 'Start Exploring!' : `Select ${2 - selectedCategories.length} more`}
+          </span>
+          {canContinue && <ArrowRight className="w-5 h-5" />}
+        </Button> */}
+
+                <Button
+          onClick={handleContinue}
+          disabled={!canContinue}
+          className={`py-4 rounded-2xl text-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 mx-auto ${
+            canContinue
+              ? 'bg-white text-purple-600 hover:bg-gray-50 shadow-lg w-80' // Increased to w-80
+              : 'bg-white/30 text-white/50 cursor-not-allowed w-full'
           }`}
         >
           <span>

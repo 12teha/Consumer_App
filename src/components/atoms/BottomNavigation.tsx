@@ -71,3 +71,6 @@ const BottomNavigation = memo(function BottomNavigation({ activeScreen, onNaviga
 });
 
 export default BottomNavigation;
+
+
+
