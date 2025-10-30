@@ -960,7 +960,7 @@ interface FilterOptions {
 
 const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, onNavigate, onLikeCountChange }: HomeScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
+  const [activeCategory, setActiveCategory] = useState(selectedCategory || 'All');
   const [showAdVideo, setShowAdVideo] = useState(false);
   const [adVideoSide, setAdVideoSide] = useState<'left' | 'right'>('left');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -999,6 +999,14 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     loadInitialData();
     loadBanners();
   }, []);
+
+  // Update activeCategory when selectedCategory prop changes
+  useEffect(() => {
+    if (selectedCategory && selectedCategory !== activeCategory) {
+      console.log('📍 Setting active category from prop:', selectedCategory);
+      setActiveCategory(selectedCategory);
+    }
+  }, [selectedCategory]);
 
   // Load offers when category or location changes
   useEffect(() => {
@@ -1114,7 +1122,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
       const response = await apiService.getOffers({
         radius: 10, // API call with 10km radius
         page: pageNum,
-        limit: 10,
+        limit: 100, // Increased limit to load more offers at once
         category: category
       });
 
@@ -1165,10 +1173,18 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
           discount = Math.round(((originalPrice - discountedPrice) / originalPrice) * 100);
         }
 
+        // Extract category from different possible field names
+        const category = offer.category ||
+                        offer.business?.businessCategory?.categoryName ||
+                        offer.businessCategory?.categoryName ||
+                        offer.categoryName ||
+                        'Uncategorized';
+
         return {
           ...offer,
           image: imageUrl,
-          discount: discount
+          discount: discount,
+          category: category
         };
       });
       console.log(`Received ${newOffers.length} offers from API`);
@@ -1185,7 +1201,8 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
         setOffersError('No offers available in your area');
       }
 
-      setHasMore(newOffers.length === 10);
+      // Check if there are more offers to load (if we got exactly 100, there might be more)
+      setHasMore(newOffers.length === 100);
       setPage(pageNum);
     } catch (error) {
       console.error('Error loading offers:', error);
@@ -1421,8 +1438,8 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     [offers, filterOptions]
   );
   
-  const latestOffers = React.useMemo(() => 
-    applyFilters(offers.slice(0, 6)), // Reduced to 6 for performance
+  const latestOffers = React.useMemo(() =>
+    applyFilters(offers), // Show all offers - no limit
     [offers, filterOptions]
   );
 
@@ -1689,10 +1706,12 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
             className="px-4 mb-6"
           >
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-gray-900">All Category Offers</h2>
+              <h2 className="text-lg font-bold text-gray-900">
+                {activeCategory === 'All' ? 'All Category Offers' : `${activeCategory} Offers`}
+              </h2>
               {filteredOffers.length > 0 && (
                 <button
-                  onClick={() => onNavigate('allOffers', { title: 'All Category Offers', offers: filteredOffers })}
+                  onClick={() => onNavigate('allOffers', { title: activeCategory === 'All' ? 'All Category Offers' : `${activeCategory} Offers`, offers: filteredOffers })}
                   className="text-purple-600 text-sm font-semibold"
                 >
                   View All
@@ -1773,7 +1792,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
             </motion.div>
           )}
 
-          {/* Latest Offers Section */}
+          {/* Latest Offers Section - With Load More */}
           {latestOffers.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -1785,12 +1804,6 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                   <Star className="w-5 h-5 text-yellow-500 mr-2" />
                   Latest Offers
                 </h2>
-                <button
-                  onClick={() => onNavigate('allOffers', { title: 'Latest Offers', offers: latestOffers })}
-                  className="text-purple-600 text-sm font-semibold"
-                >
-                  View All
-                </button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -1806,6 +1819,25 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                   />
                 ))}
               </div>
+
+              {/* Load More Button for Latest Offers */}
+              {hasMore && !loadingOffers && (
+                <div className="flex justify-center mt-4">
+                  <button
+                    onClick={() => loadOffers(page + 1, activeCategory)}
+                    className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-md"
+                  >
+                    Load More Offers
+                  </button>
+                </div>
+              )}
+
+              {/* Loading more indicator */}
+              {loadingOffers && page > 1 && (
+                <div className="flex justify-center py-4">
+                  <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
             </motion.div>
           )}
         </div>

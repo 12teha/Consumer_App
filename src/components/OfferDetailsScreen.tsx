@@ -29,6 +29,7 @@ export default function OfferDetailsScreen({
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
   const [calculatedDistance, setCalculatedDistance] = useState<string | null>(
     null
   );
@@ -41,18 +42,6 @@ export default function OfferDetailsScreen({
   const businessLongitude = business.longitude || offer.longitude;
   const businessCategory =
     business.businessCategory?.categoryName || offer.category;
-
-  // Debug: Log offer data to see what fields are available
-  React.useEffect(() => {
-    console.log("📊 Offer Data:", offer);
-    console.log("📊 Business Data:", business);
-    console.log(
-      "📍 Location:",
-      businessAddress,
-      businessLatitude,
-      businessLongitude
-    );
-  }, [offer]);
 
   // Use all uploaded images from the offer
   // API returns 'imagesUrl' array (new format) or 'photos'/'image' (old format)
@@ -79,6 +68,20 @@ export default function OfferDetailsScreen({
       return [];
     }
   }, [offer.imagesUrl, offer.photos, offer.image]);
+
+  // Debug: Log offer data to see what fields are available
+  React.useEffect(() => {
+    console.log("📊 Offer Data:", offer);
+    console.log("📊 Business Data:", business);
+    console.log(
+      "📍 Location:",
+      businessAddress,
+      businessLatitude,
+      businessLongitude
+    );
+    console.log("🖼️ Offer Images Array:", offerImages);
+    console.log("🖼️ Number of images:", offerImages.length);
+  }, [offer, offerImages]);
 
   // Calculate distance from user's current location to business
   React.useEffect(() => {
@@ -176,38 +179,49 @@ export default function OfferDetailsScreen({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="relative h-64 bg-gray-200"
+          className="relative w-full h-80 sm:h-96 md:h-[28rem] bg-gray-900 cursor-pointer"
+          onClick={() => offerImages.length > 0 && setShowImageModal(true)}
         >
-        
-      <div className="relative w-32 h-48 rounded-xl overflow-hidden bg-white flex items-center justify-center">
-       <ImageWithFallback
-        src={offer.image}
-        alt={offer.title}
-       className="w-auto h-full object-contain"
-        />
-      </div>
-
+          {offerImages.length > 0 ? (
+            <>
+              <ImageWithFallback
+                src={offerImages[currentImageIndex]}
+                alt={offer.title || 'Offer image'}
+                className="w-full h-full object-contain bg-gray-900"
+              />
+              {/* Zoom indicator */}
+              <div className="absolute bottom-3 right-3 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                🔍 Click to zoom
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+              <p className="text-gray-400 text-lg">No image available</p>
+            </div>
+          )}
 
           {/* Navigation Arrows */}
           {offerImages.length > 1 && (
             <>
               <button
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation();
                   setCurrentImageIndex((prev) =>
                     prev === 0 ? offerImages.length - 1 : prev - 1
-                  )
-                }
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+                  );
+                }}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation();
                   setCurrentImageIndex((prev) =>
                     prev === offerImages.length - 1 ? 0 : prev + 1
-                  )
-                }
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full"
+                  );
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -215,16 +229,19 @@ export default function OfferDetailsScreen({
           )}
 
           {/* Image Indicators */}
-          <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
-            {offerImages.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full ${
-                  currentImageIndex === index ? "bg-white" : "bg-white/50"
-                }`}
-              />
-            ))}
-          </div>
+          {offerImages.length > 1 && (
+            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
+              {offerImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    currentImageIndex === index ? "bg-white w-6" : "bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Discount Badge - Use discountPercentage from API */}
           {offer.discountPercentage && (
@@ -559,6 +576,69 @@ export default function OfferDetailsScreen({
             address: businessAddress || "Address not available",
           }}
         />
+      )}
+
+      {/* Full Screen Image Modal */}
+      {showImageModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+          onClick={() => setShowImageModal(false)}
+        >
+          <button
+            onClick={() => setShowImageModal(false)}
+            className="absolute top-4 right-4 z-10 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-sm transition-colors"
+          >
+            ✕
+          </button>
+
+          {/* Image with swipe navigation */}
+          <div className="relative w-full h-full flex items-center justify-center p-4">
+            <ImageWithFallback
+              src={offerImages[currentImageIndex]}
+              alt={offer.title || 'Offer image'}
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Navigation Arrows in Modal */}
+            {offerImages.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex((prev) =>
+                      prev === 0 ? offerImages.length - 1 : prev - 1
+                    );
+                  }}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-4 rounded-full backdrop-blur-sm transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex((prev) =>
+                      prev === offerImages.length - 1 ? 0 : prev + 1
+                    );
+                  }}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-4 rounded-full backdrop-blur-sm transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+
+            {/* Image counter */}
+            {offerImages.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm">
+                {currentImageIndex + 1} / {offerImages.length}
+              </div>
+            )}
+          </div>
+        </motion.div>
       )}
     </div>
   );
