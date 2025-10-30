@@ -19,44 +19,97 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
 
   const iconMap: { [key: string]: any } = {
     food: Utensils,
+    'food&dining': Utensils,
+    fooddining: Utensils,
     fashion: Shirt,
+    fashoin: Shirt,
+    clothing: Shirt,
     electronics: Smartphone,
     grocery: ShoppingBag,
     fitness: Dumbbell,
     cafe: Coffee,
     beauty: Heart,
     automotive: Car,
+    'home&lifestyle': Heart,
+    homelifestyle: Heart,
+    'small-scalemanufacturing': Dumbbell,
+    smallscalemanufacturing: Dumbbell,
+    'wholesale&distribution': ShoppingBag,
+    wholesaledistribution: ShoppingBag,
     default: ShoppingBag
   };
 
   const colorMap: { [key: string]: string } = {
     food: 'from-orange-400 to-red-500',
+    'food&dining': 'from-orange-400 to-red-500',
+    fooddining: 'from-orange-400 to-red-500',
     fashion: 'from-pink-400 to-purple-500',
+    fashoin: 'from-pink-400 to-purple-500',
+    clothing: 'from-pink-400 to-purple-500',
     electronics: 'from-blue-400 to-indigo-500',
     grocery: 'from-green-400 to-teal-500',
     fitness: 'from-red-400 to-pink-500',
     cafe: 'from-amber-400 to-orange-500',
     beauty: 'from-rose-400 to-pink-500',
     automotive: 'from-gray-400 to-slate-500',
+    'home&lifestyle': 'from-purple-400 to-indigo-500',
+    homelifestyle: 'from-purple-400 to-indigo-500',
+    'small-scalemanufacturing': 'from-teal-400 to-cyan-500',
+    smallscalemanufacturing: 'from-teal-400 to-cyan-500',
+    'wholesale&distribution': 'from-green-400 to-emerald-500',
+    wholesaledistribution: 'from-green-400 to-emerald-500',
     default: 'from-purple-400 to-blue-500'
   };
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        console.log('🔍 CategorySelectionScreen: Fetching categories...');
         const response = await apiService.getAllCategories();
-        const fetchedCategories = response.categories || [];
+        console.log('📦 CategorySelectionScreen: Full API response:', response);
 
-        const formattedCategories = fetchedCategories.map((category: any) => ({
-          id: category.id || category.name.toLowerCase().replace(/\s+/g, ''),
-          name: category.name,
-          icon: iconMap[category.name.toLowerCase().replace(/\s+/g, '')] || iconMap.default,
-          color: colorMap[category.name.toLowerCase().replace(/\s+/g, '')] || colorMap.default
-        }));
+        // Handle different response structures
+        let fetchedCategories = [];
 
+        if (response.categories && Array.isArray(response.categories)) {
+          fetchedCategories = response.categories;
+        } else if (response.data && Array.isArray(response.data)) {
+          fetchedCategories = response.data;
+        } else if (Array.isArray(response)) {
+          fetchedCategories = response;
+        } else {
+          console.error('❌ Unexpected response structure:', response);
+          throw new Error('Invalid response format');
+        }
+
+        console.log('📋 CategorySelectionScreen: Fetched categories:', fetchedCategories);
+
+        if (fetchedCategories.length === 0) {
+          console.warn('⚠️ No categories returned from API, using fallback');
+          throw new Error('No categories returned');
+        }
+
+        const formattedCategories = fetchedCategories.map((category: any) => {
+          // Handle different field names: name, categoryName, category_name
+          const categoryName = category.name || category.categoryName || category.category_name || 'Unknown';
+          const categoryId = category.id || category._id || categoryName.toLowerCase().replace(/\s+/g, '');
+          const normalizedName = categoryName.toLowerCase().replace(/\s+/g, '');
+
+          console.log('✨ Formatting category:', { categoryName, categoryId, normalizedName });
+
+          return {
+            id: categoryId,
+            name: categoryName,
+            icon: iconMap[normalizedName] || iconMap.default,
+            color: colorMap[normalizedName] || colorMap.default
+          };
+        });
+
+        console.log('✅ CategorySelectionScreen: Formatted categories:', formattedCategories);
         setCategories(formattedCategories);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('❌ Error fetching categories:', error);
+        console.log('⚠️ Using fallback categories');
         setCategories([
           { id: 'food', name: 'Food & Dining', icon: Utensils, color: 'from-orange-400 to-red-500' },
           { id: 'fashion', name: 'Fashion', icon: Shirt, color: 'from-pink-400 to-purple-500' },
@@ -71,21 +124,10 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
     fetchCategories();
   }, []);
 
-  const toggleCategory = (categoryId: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(categoryId) 
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-    );
+  const handleCategoryClick = (categoryName: string) => {
+    // Immediately navigate to home with selected category
+    onComplete([categoryName]);
   };
-
-  const handleContinue = () => {
-    if (selectedCategories.length >= 2) {
-      onComplete(selectedCategories);
-    }
-  };
-
-  const canContinue = selectedCategories.length >= 2;
 
   if (isLoading) {
     return (
@@ -111,15 +153,8 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
         transition={{ duration: 0.6 }}
         className="text-center mb-8 pt-4"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">Choose Your Interests</h1>
-        <p className="text-white/80">Select at least 2 categories to personalize your offers</p>
-        <div className="mt-4 flex justify-center">
-          <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-            <span className="text-white">
-              {selectedCategories.length}/2 minimum
-            </span>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold text-white mb-2">Choose Your Interest</h1>
+        <p className="text-white/80">Select a category to see offers</p>
       </motion.div>
 
       {/* Categories Grid */}
@@ -132,14 +167,13 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
         >
           {categories.map((category, index) => {
             const Icon = category.icon;
-            const isSelected = selectedCategories.includes(category.id);
-            
+
             return (
               <motion.div
                 key={category.id}
                 initial={{ opacity: 0, scale: 0.8, y: 50 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ 
+                transition={{
                   delay: 0.1 * index,
                   duration: 0.5,
                   type: "spring",
@@ -147,117 +181,38 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => toggleCategory(category.id)}
-                className={`relative cursor-pointer rounded-2xl p-6 transition-all duration-300 ${
-                  isSelected 
-                    ? 'bg-white shadow-2xl transform scale-105' 
-                    : 'bg-white/20 backdrop-blur-sm hover:bg-white/30'
-                }`}
+                onClick={() => handleCategoryClick(category.name)}
+                className="relative cursor-pointer rounded-2xl p-6 transition-all duration-300 bg-white/20 backdrop-blur-sm hover:bg-white/30"
               >
-                {/* Selection Ring Animation */}
-                {isSelected && (
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="absolute inset-0 rounded-2xl border-4 border-white shadow-lg"
-                  />
-                )}
-
                 {/* Icon */}
                 <motion.div
-                  className={`w-12 h-12 rounded-xl mb-3 mx-auto flex items-center justify-center ${
-                    isSelected 
-                      ? `bg-gradient-to-r ${category.color}` 
-                      : 'bg-white/30'
-                  }`}
-                  animate={{ 
-                    rotateY: isSelected ? [0, 360] : 0 
-                  }}
-                  transition={{ duration: 0.6 }}
+                  className="w-12 h-12 rounded-xl mb-3 mx-auto flex items-center justify-center bg-white/30"
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <Icon 
-                    className={`w-6 h-6 ${
-                      isSelected ? 'text-white' : 'text-white/80'
-                    }`} 
-                  />
+                  <Icon className="w-6 h-6 text-white/80" />
                 </motion.div>
 
                 {/* Label */}
-                <h3 className={`text-center font-semibold text-sm ${
-                  isSelected ? 'text-gray-900' : 'text-white'
-                }`}>
+                <h3 className="text-center font-semibold text-sm text-white">
                   {category.name}
                 </h3>
-
-                {/* Selection Indicator */}
-                {isSelected && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center"
-                  >
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.1 }}
-                      className="text-white text-sm"
-                    >
-                      ✓
-                    </motion.span>
-                  </motion.div>
-                )}
               </motion.div>
             );
           })}
         </motion.div>
       </div>
 
-      {/* Continue Button */}
+      {/* Helper Text */}
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         transition={{ delay: 0.8 }}
         className="mt-8"
       >
-        {/* <Button
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className={`w-full py-4 rounded-2xl text-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
-            canContinue
-              ? 'bg-white text-purple-600 hover:bg-gray-50 shadow-lg'
-              : 'bg-white/30 text-white/50 cursor-not-allowed'
-          }`}
-        >
-          <span>
-            {canContinue ? 'Start Exploring!' : `Select ${2 - selectedCategories.length} more`}
-          </span>
-          {canContinue && <ArrowRight className="w-5 h-5" />}
-        </Button> */}
-
-                <Button
-          onClick={handleContinue}
-          disabled={!canContinue}
-          className={`py-4 rounded-2xl text-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 mx-auto ${
-            canContinue
-              ? 'bg-white text-purple-600 hover:bg-gray-50 shadow-lg w-80' // Increased to w-80
-              : 'bg-white/30 text-white/50 cursor-not-allowed w-full'
-          }`}
-        >
-          <span>
-            {canContinue ? 'Start Exploring!' : `Select ${2 - selectedCategories.length} more`}
-          </span>
-          {canContinue && <ArrowRight className="w-5 h-5" />}
-        </Button>
-
-        {/* Helper Text */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-white/60 text-center text-sm mt-3 mb-6"
-        >
-          You can always change these later in settings
-        </motion.p>
+        <p className="text-white/80 text-center text-sm mb-6">
+          Click on any category to start exploring offers
+        </p>
       </motion.div>
     </div>
   );

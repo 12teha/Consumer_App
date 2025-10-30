@@ -113,7 +113,12 @@ export default function App() {
 
   const handleCategoriesComplete = useCallback((categories: string[]) => {
     setSelectedCategories(categories);
-    navigateToScreen('locationSetup');
+    // Set the selected category to the first one clicked
+    if (categories.length > 0) {
+      setSelectedCategory(categories[0]);
+    }
+    // Navigate directly to home screen with selected category
+    navigateToScreen('home', { category: categories[0] || 'All' });
   }, [navigateToScreen]);
 
   const handleSaveProfile = useCallback((data: any) => {

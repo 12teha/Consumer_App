@@ -377,7 +377,7 @@ const AppNavigator = memo(function AppNavigator({
           return (
             <HomeScreen
               username={username}
-              selectedCategory="All"
+              selectedCategory={screenData?.category || "All"}
               onNavigate={onNavigate}
               onLikeCountChange={onLikeCountChange}
             />

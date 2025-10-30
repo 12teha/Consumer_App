@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Categories API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .output {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        .category-card {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            margin: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Categories API</h1>
+        <p>This page tests the <code>/details/business/allcategories</code> endpoint.</p>
+
+        <div>
+            <button onclick="testAPI()">Test API Call</button>
+            <button onclick="clearOutput()">Clear Output</button>
+        </div>
+
+        <div id="output" class="output">
+            Click "Test API Call" to fetch categories from the API...
+        </div>
+
+        <div id="categoriesDisplay"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://be.offerlabs.in/api/v1';
+
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            output.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('categoriesDisplay').innerHTML = '';
+        }
+
+        async function testAPI() {
+            clearOutput();
+            log('🔍 Starting API test...', 'info');
+            log(`📍 API Base URL: ${API_BASE_URL}`, 'info');
+            log(`📡 Endpoint: /details/business/allcategories`, 'info');
+
+            try {
+                const url = `${API_BASE_URL}/details/business/allcategories`;
+                log(`\n🌐 Making request to: ${url}`, 'info');
+
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                log(`\n📊 Response Status: ${response.status} ${response.statusText}`,
+                    response.ok ? 'success' : 'error');
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                log('\n✅ SUCCESS! API Response received:', 'success');
+                log('\n📦 Full Response Object:', 'info');
+                log(JSON.stringify(data, null, 2), 'info');
+
+                // Parse categories
+                let categories = [];
+                if (data.categories && Array.isArray(data.categories)) {
+                    categories = data.categories;
+                    log(`\n✅ Found ${categories.length} categories in response.categories`, 'success');
+                } else if (data.data && Array.isArray(data.data)) {
+                    categories = data.data;
+                    log(`\n✅ Found ${categories.length} categories in response.data`, 'success');
+                } else if (Array.isArray(data)) {
+                    categories = data;
+                    log(`\n✅ Found ${categories.length} categories (array response)`, 'success');
+                } else {
+                    log('\n⚠️ WARNING: Unexpected response structure', 'error');
+                }
+
+                if (categories.length > 0) {
+                    log('\n📋 Categories List:', 'success');
+                    categories.forEach((cat, index) => {
+                        const name = cat.name || cat.categoryName || cat.category_name || 'Unknown';
+                        const id = cat.id || cat._id || 'No ID';
+                        log(`  ${index + 1}. Name: "${name}" | ID: "${id}"`, 'info');
+                    });
+
+                    // Display categories visually
+                    const display = document.getElementById('categoriesDisplay');
+                    display.innerHTML = '<h2 style="color: #667eea; margin-top: 30px;">Categories:</h2>';
+                    categories.forEach(cat => {
+                        const name = cat.name || cat.categoryName || cat.category_name || 'Unknown';
+                        const card = document.createElement('div');
+                        card.className = 'category-card';
+                        card.textContent = name;
+                        display.appendChild(card);
+                    });
+                } else {
+                    log('\n⚠️ No categories found in response', 'error');
+                }
+
+            } catch (error) {
+                log(`\n❌ ERROR: ${error.message}`, 'error');
+                log(`\n🔍 Error Details:`, 'error');
+                log(JSON.stringify(error, null, 2), 'error');
+
+                if (error.message.includes('Failed to fetch')) {
+                    log('\n💡 Possible causes:', 'info');
+                    log('  - CORS issues (Cross-Origin Resource Sharing)', 'info');
+                    log('  - Network connectivity problems', 'info');
+                    log('  - API server is down', 'info');
+                    log('  - Authentication required', 'info');
+                }
+            }
+        }
+
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            log('🎯 Page loaded. Ready to test API.', 'success');
+            log('💡 Note: This endpoint may require authentication.', 'info');
+        });
+    </script>
+</body>
+</html>
