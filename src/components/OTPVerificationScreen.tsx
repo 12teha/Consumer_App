@@ -194,7 +194,7 @@ export default function OTPVerificationScreen({ phoneNumber, onComplete }: OTPVe
           transition={{ delay: 1 }}
           className="text-xs text-gray-400 text-center mt-4"
         >
-          Code will be auto-detected from SMS
+          {/* Code will be auto-detected from SMS */}
         </motion.p>
       </motion.div>
     </div>

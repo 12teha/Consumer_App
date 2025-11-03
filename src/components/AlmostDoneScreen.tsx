@@ -466,7 +466,7 @@ export default function AlmostDoneScreen({ onComplete }: AlmostDoneScreenProps) 
           </motion.div>
 
           {/* Progress Indicator */}
-          <motion.div
+          {/* <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
@@ -482,7 +482,7 @@ export default function AlmostDoneScreen({ onComplete }: AlmostDoneScreenProps) 
                 />
               ))}
             </div>
-          </motion.div>
+          </motion.div> */}
 
           {/* Excitement Message */}
           <motion.p

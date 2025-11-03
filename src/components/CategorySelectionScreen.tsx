@@ -153,8 +153,8 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
         transition={{ duration: 0.6 }}
         className="text-center mb-8 pt-4"
       >
-        <h1 className="text-3xl font-bold text-white mb-2">Choose Your Interest</h1>
-        <p className="text-white/80">Select a category to see offers</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Discover Amazing Offers</h1>
+        <p className="text-white/80">Choose a category to explore the best deals near you</p>
       </motion.div>
 
       {/* Categories Grid */}
