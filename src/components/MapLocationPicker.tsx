@@ -355,13 +355,13 @@ export default function MapLocationPicker({
 
             {/* Action Buttons */}
             <div className="flex space-x-3">
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={onClose}
                 className="flex-1"
               >
                 Cancel
-              </Button>
+              </Button> */}
               <Button
                 onClick={handleUseLocation}
                 disabled={!selectedLocation}

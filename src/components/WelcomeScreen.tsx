@@ -219,7 +219,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
     {
       icon: MapPin,
       title: "Location-Based Deals",
-      subtitle: "Get offers from your neighborhood",
+      subtitle: "Get offers from your Neighbourhood",
       color: "from-blue-400 to-purple-500",
       iconColor: "text-blue-500",
     },
@@ -400,7 +400,7 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             onClick={handleContinue}
-            className="absolute bottom-8 text-white/70 hover:text-white transition-colors px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm"
+            className="absolute bottom-8 text-white/70 hover:text-white transition-colors px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm font-bold"
           >
             Tap to continue
           </motion.button>
