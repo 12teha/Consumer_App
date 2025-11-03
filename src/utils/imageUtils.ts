@@ -20,6 +20,12 @@ export function transformImageUrl(url: string | undefined | null): string {
     return '';
   }
 
+  // Don't transform banner S3 URLs (obz-banners bucket) - return as-is
+  if (url.includes('obz-banners.s3')) {
+    console.log('🎯 Banner S3 URL detected, returning as-is:', url);
+    return url;
+  }
+
   // If URL is not from amazonaws.com, return as-is
   if (!url.includes(AMAZONAWS_DOMAIN)) {
     return url;

@@ -215,35 +215,58 @@ class ApiService {
   }
 
   async getBanners() {
-    // Use proxy in development to avoid CORS issues, direct S3 URL in production
-    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const BANNER_URL = isDevelopment
-      ? '/api/banners/banners.json'  // Proxy endpoint for development
-      : 'https://ofb-banners.s3.ap-south-1.amazonaws.com/banners.json';  // Direct S3 URL for production
+    // Use new live banners API endpoint
+    const BANNER_API_URL = 'https://banner-be.offerlabs.in/api/banners/live';
 
-    const cacheKey = this.getCacheKey('banners');
+    const cacheKey = this.getCacheKey('/banners/live');
     const cached = this.getCachedData(cacheKey);
 
     if (cached) {
-      console.log('Using cached banners');
+      console.log('🎯 Using cached live banners');
       return cached;
     }
 
     try {
-      console.log('Fetching banners from:', BANNER_URL);
-      const response = await fetch(BANNER_URL);
+      console.log('🎯 Fetching live banners from:', BANNER_API_URL);
+      const response = await fetch(BANNER_API_URL, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch banners: ${response.status}`);
+        throw new Error(`Failed to fetch live banners: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
-      console.log('Banners fetched successfully:', data);
+      const result = await response.json();
+      console.log('✅ Live banners fetched successfully:', result);
 
-      this.setCachedData(cacheKey, data);
-      return data;
+      // API returns { data: [...], message: "..." }
+      // Transform to format expected by HomeScreen: [{ image, link, description, vendor }]
+      const bannerData = result.data ? result.data.map((banner: any) => {
+        console.log('🔄 Transforming banner:', banner);
+        const transformed = {
+          image: banner.imageUrl,
+          link: banner.link || '', // Use link if available, empty string otherwise
+          description: banner.description,
+          vendor: banner.vendor,
+          id: banner.id,
+          startDate: banner.startDate,
+          endDate: banner.endDate,
+          status: banner.status
+        };
+        console.log('✅ Transformed banner:', transformed);
+        return transformed;
+      }) : [];
+
+      console.log('📦 Final banner data array:', bannerData);
+      console.log('📊 Number of banners:', bannerData.length);
+
+      this.setCachedData(cacheKey, bannerData);
+      return bannerData;
     } catch (error) {
-      console.error('Error fetching banners:', error);
+      console.error('❌ Error fetching live banners:', error);
       throw error;
     }
   }
