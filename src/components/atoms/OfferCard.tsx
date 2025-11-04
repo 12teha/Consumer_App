@@ -26,7 +26,7 @@ interface OfferCardProps {
   showTimer?: boolean;
   onLike?: (offerId: number, liked: boolean) => void;
   onShare?: () => void;
-  onGetDirections?: () => void;
+  //onGetDirections?: () => void;
   onClick?: () => void;
   className?: string;
 }
@@ -37,7 +37,7 @@ const OfferCard = React.memo(function OfferCard({
   showTimer = false, 
   onLike, 
   onShare,
-  onGetDirections,
+  //onGetDirections,
   onClick, 
   className = "" 
 }: OfferCardProps) {
@@ -62,7 +62,7 @@ const OfferCard = React.memo(function OfferCard({
 
   const handleGetDirections = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onGetDirections?.();
+    //onGetDirections?.();
   };
 
   const handleReviewClick = () => {
@@ -111,7 +111,7 @@ const OfferCard = React.memo(function OfferCard({
             
             <div className="flex items-center justify-between">
               <button
-                onClick={handleGetDirections}
+                //onClick={handleGetDirections}
                 className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700"
               >
                 <Navigation className="w-3 h-3" />
@@ -174,7 +174,7 @@ const OfferCard = React.memo(function OfferCard({
         
         <div className="flex items-center justify-between">
           <button
-            onClick={handleGetDirections}
+            // onClick={handleGetDirections}
             className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700"
           >
             <Navigation className="w-3 h-3" />

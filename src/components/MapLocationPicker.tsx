@@ -95,6 +95,8 @@ export default function MapLocationPicker({
   const [isLoadingAddress, setIsLoadingAddress] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>(
     currentLocation
       ? [currentLocation.latitude, currentLocation.longitude]
@@ -104,6 +106,20 @@ export default function MapLocationPicker({
   const [userCurrentLocation, setUserCurrentLocation] = useState<[number, number] | null>(
     currentLocation ? [currentLocation.latitude, currentLocation.longitude] : null
   );
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+
+  // Initialize Google Places Autocomplete Service
+  useEffect(() => {
+    if (typeof window.google !== 'undefined' && window.google.maps) {
+      autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+
+      // Create a dummy div for PlacesService (required by API)
+      const dummyDiv = document.createElement('div');
+      placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
+    }
+  }, []);
 
   // Get current location
   const getCurrentLocation = () => {
@@ -159,14 +175,87 @@ export default function MapLocationPicker({
     fetchAddress(lat, lng);
   };
 
+  // Fetch search suggestions using Google Places Autocomplete
+  const fetchSearchSuggestions = (query: string) => {
+    if (!query.trim() || !autocompleteServiceRef.current) {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Get autocomplete predictions from Google Places API
+    autocompleteServiceRef.current.getPlacePredictions(
+      {
+        input: query,
+        componentRestrictions: { country: 'in' }, // Restrict to India
+      },
+      (predictions, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+          setSearchSuggestions(predictions);
+          setShowSuggestions(true);
+        } else {
+          setSearchSuggestions([]);
+          setShowSuggestions(false);
+        }
+      }
+    );
+  };
+
+  // Handle search input change with debouncing
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for fetching suggestions
+    searchTimeoutRef.current = setTimeout(() => {
+      fetchSearchSuggestions(value);
+    }, 300); // 300ms debounce
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (placeId: string, description: string) => {
+    if (!placesServiceRef.current) return;
+
+    // Get place details to fetch coordinates
+    placesServiceRef.current.getDetails(
+      {
+        placeId: placeId,
+        fields: ['formatted_address', 'geometry'],
+      },
+      (place, status) => {
+        if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+          const formattedAddress = place.formatted_address || description;
+
+          // Update coordinates
+          if (place.geometry?.location) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            setSelectedLocation({ lat, lng });
+            setMapCenter([lat, lng]);
+            setAddress(formattedAddress);
+            setSearchQuery(formattedAddress);
+          }
+
+          setShowSuggestions(false);
+        }
+      }
+    );
+  };
+
   // Search location
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
+    setShowSuggestions(false);
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`,
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1&countrycodes=in`,
         {
           headers: {
             'Accept': 'application/json',
@@ -223,6 +312,15 @@ export default function MapLocationPicker({
     }
   }, [isOpen, currentLocation]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
   if (!isOpen) return null;
 
   return (
@@ -239,7 +337,7 @@ export default function MapLocationPicker({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-2xl w-full max-w-6xl h-[90vh] overflow-hidden shadow-2xl flex flex-col"
+          className="bg-white rounded-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden shadow-2xl flex flex-col"
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 flex items-center justify-between flex-shrink-0">
@@ -262,12 +360,38 @@ export default function MapLocationPicker({
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchInputChange}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  onFocus={() => searchSuggestions.length > 0 && setShowSuggestions(true)}
                   placeholder="Search for a location (e.g., Indiranagar, Bangalore)"
                   className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+                {/* Suggestions Dropdown */}
+                {showSuggestions && searchSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50">
+                    {searchSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.place_id}
+                        onClick={() => handleSuggestionClick(suggestion.place_id, suggestion.description)}
+                        className="w-full px-4 py-3 text-left hover:bg-purple-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                      >
+                        <div className="flex items-start space-x-2">
+                          <MapPin className="w-4 h-4 text-purple-600 mt-1 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {suggestion.structured_formatting.main_text}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {suggestion.structured_formatting.secondary_text}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <Button
                 onClick={handleSearch}
@@ -280,7 +404,7 @@ export default function MapLocationPicker({
           </div>
 
           {/* Map Container */}
-          <div className="relative flex-1 overflow-hidden bg-gray-100" style={{ minHeight: '500px' }}>
+          <div className="relative flex-1 overflow-hidden bg-gray-100" style={{ minHeight: '400px' }}>
             <div style={{ width: '100%', height: '100%', position: 'absolute' }}>
               <MapContainer
                 key={mapKey}
@@ -332,24 +456,24 @@ export default function MapLocationPicker({
           </div>
 
           {/* Selected Location Info */}
-          <div className="p-4 border-t border-gray-200 flex-shrink-0">
-            <div className="mb-4">
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
+          <div className="p-3 border-t border-gray-200 flex-shrink-0">
+            <div className="mb-3">
+              <label className="text-xs font-medium text-gray-700 mb-1 block">
                 Selected Location:
               </label>
               {isLoadingAddress ? (
                 <div className="flex items-center space-x-2 text-gray-500">
                   <Loader className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">Loading address...</span>
+                  <span className="text-xs">Loading address...</span>
                 </div>
               ) : selectedLocation ? (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm text-gray-900 font-medium">
+                <div className="bg-gray-50 p-2 rounded-lg">
+                  <p className="text-xs text-gray-900 font-medium line-clamp-2">
                     {address || 'Click on the map to select a location'}
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">Click on the map to select a location</p>
+                <p className="text-xs text-gray-500">Click on the map to select a location</p>
               )}
             </div>
 

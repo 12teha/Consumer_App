@@ -207,7 +207,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
       console.log(`Fetching offers - Page: ${pageNum}, Category: ${category}, Location:`, currentLocation);
 
       const response = await apiService.getOffers({
-        radius: 10, // API call with 10km radius
+        radius: filterOptions.distance, // Use user-selected distance filter
         page: pageNum,
         limit: 100, // Increased limit to load more offers at once
         category: category
@@ -493,13 +493,22 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
 
   const handleFilterApply = () => {
     setShowFilterPanel(false);
-    // Filters are applied in the filteredOffers memo
+    // Reload offers with new distance filter
+    setOffers([]);
+    setPage(1);
+    setHasMore(true);
+    loadOffers(1, activeCategory);
   };
 
   const handleFilterReset = () => {
     setFilterOptions({
       distance: 10 // Reset to 10km
     });
+    // Reload offers with reset filter
+    setOffers([]);
+    setPage(1);
+    setHasMore(true);
+    loadOffers(1, activeCategory);
   };
 
   const filteredOffers = React.useMemo(() => {
@@ -843,15 +852,15 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                           {offer.originalPrice > offer.discountedPrice ? (
                             <>
                               <span className="text-sm font-bold text-gray-900">
-                                ${offer.discountedPrice}
+                                ₹{offer.discountedPrice}
                               </span>
                               <span className="text-xs text-gray-500 line-through">
-                                ${offer.originalPrice}
+                                ₹{offer.originalPrice}
                               </span>
                             </>
                           ) : (
                             <span className="text-sm font-bold text-gray-900">
-                              ${offer.discountedPrice || offer.originalPrice}
+                              ₹{offer.discountedPrice || offer.originalPrice}
                             </span>
                           )}
                         </div>
