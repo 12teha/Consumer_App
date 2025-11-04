@@ -421,7 +421,7 @@ export default function TermsConditionsScreen({ onBack, initialSection }: TermsC
                   Terms of Service
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Version 1.0 | Last updated: 24th October 2025
+                  Version 1.0 | Last updated: 4th November 2025
                 </p>
               </div>
               
@@ -937,7 +937,7 @@ export default function TermsConditionsScreen({ onBack, initialSection }: TermsC
                   Privacy Policy
                 </h2>
                 <p className="text-sm text-gray-500">
-                  Last updated: 24th October 2025
+                  Last updated: 4th November 2025
                 </p>
               </div>
 
@@ -1266,16 +1266,18 @@ export default function TermsConditionsScreen({ onBack, initialSection }: TermsC
                   </p>
                   <p className="flex items-center">
                     <span className="font-semibold w-20">Phone:</span>
-                    +91 80 1234 5678
+                    +91 9008522366
                   </p>
                   <p className="flex items-center">
                     <span className="font-semibold w-20">Address:</span>
-                    Bengaluru, Karnataka, India
+                    #2085/16, 2nd Floor, Spoorthi, Wilson Garden Society Layout, Puttenahalli Main Road, JP Nagar 7th Phase, Bangalore- 560078.
+                    <br />
+                  
                   </p>
                 </div>
                 <div className="mt-4 p-3 bg-white rounded border">
                   <p className="text-xs text-gray-600">
-                    <strong>Response Time:</strong> We typically respond to all inquiries within 24-48 hours during business days.
+                    <strong>Response Time:</strong> We typically respond to all enquiries within 24-48 hours during business days.
                   </p>
                 </div>
               </div>
@@ -1287,7 +1289,7 @@ export default function TermsConditionsScreen({ onBack, initialSection }: TermsC
               transition={{ delay: 0.4 }}
               className="text-center text-xs text-gray-500 pb-4"
             >
-              Last updated: January 2024
+              Last updated: 4th November 2025
             </motion.div>
           </div>
         </motion.div>

@@ -357,7 +357,7 @@ export default function ProfileScreen({
     {
       id: "terms",
       icon: FileText,
-      title: "Terms & Conditions",
+      title: "Terms & Conditions & Privacy Policy",
       subtitle: "Read our terms of service",
       action: () => onNavigate("terms"),
     },
@@ -388,9 +388,9 @@ export default function ProfileScreen({
     {
       type: "phone",
       label: "Phone Support",
-      value: "+91 8748990815",
+      value: "+91 9008522366",
       icon: Phone,
-      action: () => window.open("tel:+918748990815"),
+      action: () => window.open("tel:+919008522366"),
     },
   ];
 
@@ -634,7 +634,7 @@ export default function ProfileScreen({
           transition={{ delay: 0.5 }}
           className="text-center text-gray-400 text-sm pb-6"
         >
-          OfferBeez v1.0.0
+          OfferBeez Version 1.0.0
         </motion.div>
       </div>
     </div>
