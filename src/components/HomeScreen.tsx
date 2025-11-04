@@ -61,7 +61,16 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
   const [loadingOffers, setLoadingOffers] = useState(false);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [offersError, setOffersError] = useState<string | null>(null);
-  const [banners, setBanners] = useState<Array<{ image: string; link: string }>>([]);
+  const [banners, setBanners] = useState<Array<{
+    image: string;
+    link: string;
+    description?: string;
+    vendor?: string;
+    id?: number;
+    startDate?: string;
+    endDate?: string;
+    status?: string;
+  }>>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [loadingBanners, setLoadingBanners] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -310,38 +319,25 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
   const loadBanners = async () => {
     try {
       setLoadingBanners(true);
-      console.log('🎯 Loading banners from API...');
+      console.log('🎯 Loading live banners from API...');
       const response = await apiService.getBanners();
-      console.log('🎯 Banners API Response:', response);
+      console.log('🎯 Live Banners API Response:', response);
+      console.log('🎯 Response type:', typeof response);
+      console.log('🎯 Is array:', Array.isArray(response));
+      console.log('🎯 Response length:', response?.length);
 
-      // API returns array like: [{ image: "url", link: "url" }, ...]
-      const bannerData: Array<{ image: string; link: string }> = [];
-
-      if (Array.isArray(response)) {
-        response.forEach((item: any) => {
-          // New format: { image: "url", link: "url" }
-          if (item.image) {
-            bannerData.push({
-              image: item.image,
-              link: item.link || ''
-            });
-          }
-        });
-      }
-
-      console.log('🎯 Extracted banner data:', bannerData);
-      console.log('🎯 Number of banners:', bannerData.length);
-
-      if (bannerData.length > 0) {
-        console.log('✅ Setting banners state with:', bannerData);
-        setBanners(bannerData);
-        console.log('✅ Banners state updated!');
+      // API service now returns transformed array: [{ image, link, description, vendor, ... }]
+      if (Array.isArray(response) && response.length > 0) {
+        console.log('✅ Setting banners state with:', response);
+        console.log('✅ First banner:', response[0]);
+        setBanners(response);
+        console.log('✅ Banners state updated! Total banners:', response.length);
       } else {
-        console.warn('⚠️ No banners from API - empty array');
+        console.warn('⚠️ No live banners available - response:', response);
         setBanners([]);
       }
     } catch (error) {
-      console.error('❌ Error loading banners:', error);
+      console.error('❌ Error loading live banners:', error);
       setBanners([]);
     } finally {
       setLoadingBanners(false);
@@ -706,45 +702,39 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
               className="px-4 py-3 bg-white"
             >
               {loadingBanners ? (
-                <div className="w-full h-48 rounded-xl bg-gray-200 animate-pulse"></div>
+                <div className="w-full h-64 rounded-xl bg-gray-200 animate-pulse"></div>
               ) : banners.length > 0 ? (
-                <div className="relative w-full rounded-xl overflow-hidden shadow-lg cursor-pointer" style={{ height: '180px', minHeight: '180px', maxHeight: '180px' }}>
+                <div className="relative w-full rounded-xl overflow-hidden shadow-lg cursor-pointer" style={{ height: '240px', minHeight: '240px', maxHeight: '240px' }}>
                   {/* Banner Images */}
                   {banners.map((banner, index) => (
                     <div
                       key={`banner-${index}`}
-                      className="absolute top-0 left-0 w-full h-full bg-gray-100 hover:bg-gray-200 transition-colors duration-300"
+                      className="absolute top-0 left-0 w-full h-full bg-gray-100"
                       style={{
                         opacity: currentBannerIndex === index ? 1 : 0,
                         zIndex: currentBannerIndex === index ? 10 : 0,
                         transition: 'opacity 0.7s ease-in-out',
-                        cursor: 'pointer'
+                        pointerEvents: currentBannerIndex === index ? 'auto' : 'none'
                       }}
                       onClick={() => {
-                        console.log(`🖱️ Banner ${index + 1} clicked`);
-                        console.log(`🔗 Banner link:`, banner.link);
-
                         // If banner has a link, open it in new tab
                         if (banner.link && banner.link.trim() !== '') {
                           window.open(banner.link, '_blank', 'noopener,noreferrer');
-                        } else {
-                          // Fallback: Show all offers when banner is clicked
-                          if (offers.length > 0) {
-                            onNavigate('allOffers', { title: 'Featured Offers', offers: offers });
-                          }
                         }
                       }}
                     >
-                      <ImageWithFallback
+                      <img
                         src={banner.image}
-                        alt={`Banner ${index + 1}`}
-                        className="w-full h-full object-fit"
-                        onError={() => {
-                          console.error('❌ Failed to load banner:', banner.image);
+                        alt={`Banner ${index + 1} - ${banner.vendor || 'Advertisement'}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.error(`❌ Failed to load banner ${index + 1}:`, banner.image);
+                          e.currentTarget.style.display = 'none';
                         }}
                         onLoad={() => {
-                          console.log(`✅ Banner ${index + 1} loaded successfully`);
+                          console.log(`✅ Banner ${index + 1} loaded:`, banner.image);
                         }}
+                        loading="eager"
                       />
                     </div>
                   ))}
