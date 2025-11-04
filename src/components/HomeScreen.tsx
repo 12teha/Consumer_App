@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -766,7 +767,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
             </motion.div>
           )}
 
-          {/* Auto-Sliding Offers Section - Disabled auto-sliding */}
+          {/* All Category Offers Section with Card Layout */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -801,16 +802,70 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
             )}
 
             {!loadingOffers && !offersError && filteredOffers.length > 0 && (
-              <div className="space-y-3">
-                {filteredOffers.slice(0, 5).map((offer) => (
-                  <OfferCard
+              <div className="grid grid-cols-2 gap-3">
+                {filteredOffers.slice(0, 6).map((offer) => (
+                  <motion.div
                     key={`category-${offer.id}`}
-                    offer={offer}
-                    onLike={handleLikeOffer}
-                    onGetDirections={() => handleGetDirections(offer)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 cursor-pointer"
                     onClick={() => onNavigate('offerDetails', { offer })}
-                    showShare={false} // Remove share button
-                  />
+                  >
+                    {/* Offer Image - Perfectly fitted to card */}
+                      <div className="relative w-full aspect-square flex items-center justify-center bg-white rounded-xl">                      <ImageWithFallback
+                        src={offer.image}
+                        alt={offer.title}
+                        className="w-auto h-40 object-contain;"
+                        fallbackSrc="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200"
+                      />
+                      
+                      {/* Discount Badge */}
+                      {offer.discount > 0 && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                          {offer.discount}% OFF
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Offer Details */}
+                    <div className="p-3">
+                      <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 mb-1">
+                        {offer.title}
+                      </h3>
+                      
+                      <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                        {offer.description}
+                      </p>
+
+                      {/* Price Section */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-1">
+                          {offer.originalPrice > offer.discountedPrice ? (
+                            <>
+                              <span className="text-sm font-bold text-gray-900">
+                                ${offer.discountedPrice}
+                              </span>
+                              <span className="text-xs text-gray-500 line-through">
+                                ${offer.originalPrice}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-bold text-gray-900">
+                              ${offer.discountedPrice || offer.originalPrice}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Store and Distance */}
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span className="truncate">{offer.storeName || offer.business?.name}</span>
+                        {offer.distance && (
+                          <span>{parseFloat(offer.distance).toFixed(1)}km</span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             )}
