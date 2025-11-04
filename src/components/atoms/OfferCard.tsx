@@ -26,7 +26,7 @@ interface OfferCardProps {
   showTimer?: boolean;
   onLike?: (offerId: number, liked: boolean) => void;
   onShare?: () => void;
-  //onGetDirections?: () => void;
+  onGetDirections?: () => void;
   onClick?: () => void;
   className?: string;
 }
@@ -37,7 +37,7 @@ const OfferCard = React.memo(function OfferCard({
   showTimer = false, 
   onLike, 
   onShare,
-  //onGetDirections,
+  onGetDirections,
   onClick, 
   className = "" 
 }: OfferCardProps) {
@@ -62,7 +62,7 @@ const OfferCard = React.memo(function OfferCard({
 
   const handleGetDirections = (e: React.MouseEvent) => {
     e.stopPropagation();
-    //onGetDirections?.();
+    onGetDirections?.();
   };
 
   const handleReviewClick = () => {
@@ -111,7 +111,7 @@ const OfferCard = React.memo(function OfferCard({
             
             <div className="flex items-center justify-between">
               <button
-                //onClick={handleGetDirections}
+                onClick={handleGetDirections}
                 className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700"
               >
                 <Navigation className="w-3 h-3" />
@@ -161,10 +161,10 @@ const OfferCard = React.memo(function OfferCard({
             <span className="text-sm font-bold text-green-600">₹{offer.discountedPrice}</span>
             <span className="text-xs text-gray-400 line-through ml-1">₹{offer.originalPrice}</span>
           </div>
-          <div className="flex items-center space-x-1">
+          {/*<div className="flex items-center space-x-1">
             <Star className="w-3 h-3 text-yellow-400 fill-current" />
             <span className="text-xs text-gray-600">{offer.rating}</span>
-          </div>
+          </div>*/}
         </div>
         
         <div className="flex items-center justify-between mb-2 text-xs text-gray-500">
@@ -173,13 +173,13 @@ const OfferCard = React.memo(function OfferCard({
         </div>
         
         <div className="flex items-center justify-between">
-          <button
-            // onClick={handleGetDirections}
+          {/*<button
+            onClick={handleGetDirections}
             className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700"
           >
             <Navigation className="w-3 h-3" />
-            <span>Directions</span>
-          </button>
+            {/*<span>Directions</span>*/}
+          {/*</button>*/}
           {/* Share button removed */}
         </div>
       </div>
