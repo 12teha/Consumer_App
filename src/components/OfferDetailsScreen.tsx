@@ -174,128 +174,108 @@ export default function OfferDetailsScreen({
       </motion.div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Image Carousel */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="relative w-full h-80 sm:h-96 md:h-[28rem] bg-gray-900 cursor-pointer"
-          onClick={() => offerImages.length > 0 && setShowImageModal(true)}
-        >
-          {offerImages.length > 0 ? (
-            <>
-              <ImageWithFallback
-                src={offerImages[currentImageIndex]}
-                alt={offer.title || 'Offer image'}
-                className="w-full h-full object-contain bg-gray-900"
-              />
-              {/* Zoom indicator */}
-              <div className="absolute bottom-3 right-3 bg-black/50 text-white px-2 py-1 rounded text-xs">
-                🔍 Click to zoom
-              </div>
-            </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-800">
-              <p className="text-gray-400 text-lg">No image available</p>
-            </div>
-          )}
-
-          {/* Navigation Arrows */}
-          {offerImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImageIndex((prev) =>
-                    prev === 0 ? offerImages.length - 1 : prev - 1
-                  );
-                }}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentImageIndex((prev) =>
-                    prev === offerImages.length - 1 ? 0 : prev + 1
-                  );
-                }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </>
-          )}
-
-          {/* Image Indicators */}
-          {offerImages.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {offerImages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    currentImageIndex === index ? "bg-white w-6" : "bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Discount Badge - Use discountPercentage from API */}
-          {offer.discountPercentage && (
-            <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full font-bold shadow-lg">
-              {offer.discountPercentage}% OFF
-            </div>
-          )}
-        </motion.div>
-
-        {/* Offer Info */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-4 border-b border-gray-100"
-        >
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900">
-                {offer.title || businessName}
-              </h2>
-              {businessCategory && (
-                <span className="inline-block mt-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
-                  {businessCategory}
-                </span>
-              )}
-              <p className="text-gray-600 mt-2">{offer.description}</p>
-
-              {/* Business Information - Always visible */}
-              {businessName && (
-                <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                  <p className="text-sm font-semibold text-gray-900 mb-1">
-                    🏢 {businessName}
-                  </p>
-                  {businessCategory && (
-                    <p className="text-xs text-blue-600 mb-1">
-                      📂 {businessCategory}
-                    </p>
-                  )}
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          {/* Flipkart-style Layout */}
+          <div className="bg-white lg:flex lg:gap-0">
+            {/* Image Section - Left side with thumbnails and main image */}
+            <div className="lg:w-[45%] p-6 flex gap-4">
+              {/* Vertical Thumbnails */}
+              {offerImages.length > 1 && (
+                <div className="hidden lg:flex flex-col gap-3 w-16">
+                  {offerImages.map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-16 h-16 border-2 rounded overflow-hidden flex-shrink-0 ${
+                        currentImageIndex === index ? "border-blue-600" : "border-gray-300"
+                      }`}
+                    >
+                      <ImageWithFallback
+                        src={img}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
-            </div>
-            {offer.rating && (
-              <div className="flex items-center space-x-1 ml-3">
-                <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span className="font-semibold text-gray-900">
-                  {offer.rating}
-                </span>
-              </div>
-            )}
-          </div>
 
-          {/* Price Information - Always show if available */}
-          {(offer.discountedPrice || offer.originalPrice) && (
-            <div className="flex items-center justify-between mb-4 p-3 bg-green-50 rounded-lg">
+              {/* Main Image */}
+              <div className="flex-1 flex flex-col">
+                <div
+                  className="relative w-full bg-white cursor-pointer flex items-center justify-center"
+                  style={{ minHeight: '450px' }}
+                  onClick={() => offerImages.length > 0 && setShowImageModal(true)}
+                >
+                  {offerImages.length > 0 ? (
+                    <>
+                      <ImageWithFallback
+                        src={offerImages[currentImageIndex]}
+                        alt={offer.title || 'Offer image'}
+                        className="max-w-full max-h-[450px] object-contain"
+                      />
+                      {/* Discount Badge */}
+                      {offer.discountPercentage && (
+                        <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1.5 rounded font-bold text-sm shadow-lg">
+                          {offer.discountPercentage}% OFF
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                      <p className="text-gray-400 text-lg">No image available</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons below image */}
+                <div className="flex gap-3 mt-6">
+                  <Button
+                    onClick={handleGetDirections}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-md font-semibold"
+                  >
+                    <Navigation className="w-5 h-5 mr-2 inline" />
+                    Get Directions
+                  </Button>
+                  {offer.businessPhone && (
+                    <Button
+                      onClick={() => window.open(`tel:${offer.businessPhone}`)}
+                      className="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-3 px-6 rounded-md font-semibold"
+                    >
+                      <Phone className="w-5 h-5 mr-2 inline" />
+                      Call Now
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Offer Details */}
+            <div className="lg:w-[55%] p-6 border-l border-gray-200">
+              {/* Title */}
+              <h1 className="text-xl font-normal text-gray-800 mb-3">
+                {offer.title || businessName}
+              </h1>
+
+              {/* Rating and Category */}
+              <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-200">
+                {offer.rating && (
+                  <div className="flex items-center gap-1 bg-green-600 text-white px-2 py-1 rounded text-sm font-semibold">
+                    <span>{offer.rating}</span>
+                    <Star className="w-3 h-3 fill-current" />
+                  </div>
+                )}
+                {businessCategory && (
+                  <span className="text-gray-600 text-sm">
+                    {businessCategory}
+                  </span>
+                )}
+              </div>
+
+              {/* Price Section */}
+              {(offer.discountedPrice || offer.originalPrice) && (
+                <div className="mb-4 pb-4 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 {offer.discountedPrice && (
                   <span className="text-2xl font-bold text-green-600">
@@ -319,11 +299,16 @@ export default function OfferDetailsScreen({
                     </p>
                   </div>
                 )}
-            </div>
-          )}
+                </div>
+              )}
 
-          {/* Offer Details Grid - Always show available information */}
-          <div className="space-y-3 mb-4">
+              {/* Description */}
+              <div className="mb-4 pb-4 border-b border-gray-200">
+                <p className="text-gray-700 text-sm leading-relaxed">{offer.description}</p>
+              </div>
+
+              {/* Offer Details */}
+              <div className="space-y-4 mb-4">
             {/* Location - Always visible */}
             <div className="flex items-start space-x-2 text-sm">
               <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
@@ -458,35 +443,20 @@ export default function OfferDetailsScreen({
                 </div>
               </div>
             )}
-          </div>
+              </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3">
-            <Button
-              onClick={handleGetDirections}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 flex items-center justify-center space-x-2"
-            >
-              <Navigation className="w-4 h-4" />
-              <span>Get Directions</span>
-            </Button>
-            {offer.businessPhone && (
-              <Button
-                onClick={() => window.open(`tel:${offer.businessPhone}`)}
-                className="flex-1 bg-green-600 hover:bg-green-700 flex items-center justify-center space-x-2"
-              >
-                <Phone className="w-4 h-4" />
-                <span>Call Now</span>
-              </Button>
-            )}
-          </div>
-        </motion.div>
+              {/* Business Info */}
+              {businessName && (
+                <div className="mb-4 pb-4 border-b border-gray-200">
+                  <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                    <span>🏢</span>
+                    <span>{businessName}</span>
+                  </p>
+                </div>
+              )}
 
-        {/* Detailed Information */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white p-4 border-b border-gray-100"
-        >
+              {/* About This Offer */}
+              <div className="mb-6">
           <h3 className="font-semibold text-gray-900 mb-3">About This Offer</h3>
 
           {offer.longDescription ? (
@@ -561,7 +531,10 @@ export default function OfferDetailsScreen({
               </div>
             </div>
           )}
-        </motion.div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Directions Map Modal */}

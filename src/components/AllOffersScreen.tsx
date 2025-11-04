@@ -174,19 +174,18 @@ export default function AllOffersScreen({
 
       {/* Offers Grid */}
       <div className="flex-1 overflow-y-auto p-4 pb-20">
-        {/* <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {sortedOffers.map((offer) => (
             <OfferCard
               key={offer.id}
               offer={offer}
               onLike={handleLikeOffer}
               onShare={() => handleShare(offer)}
-              onGetDirections={() => handleGetDirections(offer)}
               onClick={() => onOfferClick(offer)}
               className="w-full"
             />
           ))}
-        </div> */}
+        </div>
 
         {sortedOffers.length === 0 && (
           <div className="text-center py-12">
