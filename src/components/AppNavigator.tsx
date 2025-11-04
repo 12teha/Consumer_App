@@ -237,7 +237,6 @@
 
 // export default AppNavigator;
 
-
 ///////////////////////////////
 
 import React, { memo, useMemo } from "react";
@@ -314,7 +313,6 @@ const AppNavigator = memo(function AppNavigator({
   onSaveProfile,
   onNavigateBack,
 }: AppNavigatorProps) {
-  
   // Handle back navigation specifically for offer details to always go to home
   const handleOfferDetailsBack = () => {
     onNavigate("home");
@@ -352,7 +350,7 @@ const AppNavigator = memo(function AppNavigator({
         case "faq":
           return <FAQScreen onBack={onNavigateBack} />;
 
-        case 'terms':
+        case "terms":
           return <TermsConditionsScreen onBack={onNavigateBack} />;
 
         case "locationSetup":
@@ -385,9 +383,9 @@ const AppNavigator = memo(function AppNavigator({
 
         case "offerDetails":
           return (
-            <OfferDetailsScreen 
-              offer={selectedOffer} 
-              onBack={handleOfferDetailsBack} 
+            <OfferDetailsScreen
+              offer={selectedOffer}
+              onBack={handleOfferDetailsBack}
             />
           );
 
@@ -441,8 +439,6 @@ const AppNavigator = memo(function AppNavigator({
               onNavigate={onNavigate}
             />
           );
-
-        
 
         case "nearbyAreas":
           return (

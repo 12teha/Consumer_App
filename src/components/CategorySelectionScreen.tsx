@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, ShoppingBag, Utensils, Shirt, Smartphone, Dumbbell, Coffee, Heart, Car } from 'lucide-react';
 import { Button } from './ui/button';
-import BackButton from './atoms/BackButton';
 import BottomNavigation from './atoms/BottomNavigation';
 import { apiService } from '../services/api';
 
@@ -143,9 +142,6 @@ export default function CategorySelectionScreen({ onComplete, onBack, onNavigate
 
   return (
     <div className="h-screen bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 p-8 flex flex-col">
-      {/* Back Button */}
-      {onBack && <BackButton onBack={onBack} />}
-      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -50 }}

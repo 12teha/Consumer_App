@@ -63,15 +63,15 @@ export default function AllOffersScreen({
     setShowSharePopup(true);
   };
 
-  const handleGetDirections = (offer: any) => {
-    setDirectionData({
-      storeName: offer.title,
-      storeAddress: offer.address,
-      distance: offer.distance,
-      estimatedTime: `${Math.ceil(parseFloat(offer.distance) * 4)} min`
-    });
-    setShowDirectionPopup(true);
-  };
+  // const handleGetDirections = (offer: any) => {
+  //   setDirectionData({
+  //     storeName: offer.title,
+  //     storeAddress: offer.address,
+  //     distance: offer.distance,
+  //     estimatedTime: `${Math.ceil(parseFloat(offer.distance) * 4)} min`
+  //   });
+  //   setShowDirectionPopup(true);
+  // };
 
   const filteredOffers = offers.filter(offer => {
     const matchesSearch = offer.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -106,12 +106,12 @@ export default function AllOffersScreen({
   className="bg-white px-4 py-3 shadow-sm"
 >
   <div className="flex items-center justify-between mb-3">
-    <button 
+    {/* <button 
       onClick={onBack}
       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
     >
       <ArrowLeft className="w-5 h-5 text-gray-600" />
-    </button>
+    </button> */}
     <h1 className="text-lg font-bold text-gray-900">{title}</h1>
     <div className="w-8" /> {/* Spacer for balance */}
   </div>
@@ -174,7 +174,7 @@ export default function AllOffersScreen({
 
       {/* Offers Grid */}
       <div className="flex-1 overflow-y-auto p-4 pb-20">
-        <div className="grid grid-cols-2 gap-3">
+        {/* <div className="grid grid-cols-2 gap-3">
           {sortedOffers.map((offer) => (
             <OfferCard
               key={offer.id}
@@ -186,7 +186,7 @@ export default function AllOffersScreen({
               className="w-full"
             />
           ))}
-        </div>
+        </div> */}
 
         {sortedOffers.length === 0 && (
           <div className="text-center py-12">
