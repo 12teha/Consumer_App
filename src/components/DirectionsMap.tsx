@@ -168,7 +168,7 @@ export default function DirectionsMap({ isOpen, onClose, destination }: Directio
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+              className="text-black hover:bg-white/20 rounded-full p-2 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
