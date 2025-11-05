@@ -9,6 +9,7 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import CategoryIcon from './atoms/CategoryIcon';
 import OfferCard from './atoms/OfferCard';
 import Banner from './atoms/Banner';
+import Footer from './atoms/Footer';
 import AdVideoPopup, { shouldShowAdVideo } from './atoms/AdVideoPopup';
 import LocationButton from './atoms/LocationButton';
 import NotificationPanel from './molecules/NotificationPanel';
@@ -702,19 +703,15 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
           )}
         </AnimatePresence>
 
-        {/* Main Content */}
-        <div className="pb-4">
-          {/* Auto-Scrollable Banners Section - At the top */}
+        {/* Main Content - Flipkart Style */}
+        <div className="pb-4 bg-gray-50">
+          {/* Hero Banners Section - Full Width Horizontal Scrolling */}
           {!showSearchResults && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-4 py-3 bg-white"
-            >
+            <div className="bg-white mb-2">
               {loadingBanners ? (
-                <div className="w-full h-64 rounded-xl bg-gray-200 animate-pulse"></div>
+                <div className="w-full h-64 bg-gray-200 animate-pulse"></div>
               ) : banners.length > 0 ? (
-                <div className="relative w-full rounded-xl overflow-hidden shadow-lg cursor-pointer" style={{ height: '240px', minHeight: '240px', maxHeight: '240px' }}>
+                <div className="relative w-full overflow-hidden cursor-pointer" style={{ height: '250px' }}>
                   {/* Banner Images */}
                   {banners.map((banner, index) => (
                     <div
@@ -723,11 +720,10 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                       style={{
                         opacity: currentBannerIndex === index ? 1 : 0,
                         zIndex: currentBannerIndex === index ? 10 : 0,
-                        transition: 'opacity 0.7s ease-in-out',
+                        transition: 'opacity 0.5s ease-in-out',
                         pointerEvents: currentBannerIndex === index ? 'auto' : 'none'
                       }}
                       onClick={() => {
-                        // If banner has a link, open it in new tab
                         if (banner.link && banner.link.trim() !== '') {
                           window.open(banner.link, '_blank', 'noopener,noreferrer');
                         }
@@ -735,15 +731,8 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                     >
                       <img
                         src={banner.image}
-                        alt={`Banner ${index + 1} - ${banner.vendor || 'Advertisement'}`}
+                        alt={`Banner ${index + 1}`}
                         className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error(`❌ Failed to load banner ${index + 1}:`, banner.image);
-                          e.currentTarget.style.display = 'none';
-                        }}
-                        onLoad={() => {
-                          console.log(`✅ Banner ${index + 1} loaded:`, banner.image);
-                        }}
                         loading="eager"
                       />
                     </div>
@@ -751,104 +740,164 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
 
                   {/* Banner Indicators */}
                   {banners.length > 1 && (
-                    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2" style={{ zIndex: 20 }}>
+                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1.5" style={{ zIndex: 20 }}>
                       {banners.map((_, index) => (
                         <button
                           key={`indicator-${index}`}
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevent banner click when clicking indicator
+                            e.stopPropagation();
                             setCurrentBannerIndex(index);
                           }}
                           className={`rounded-full transition-all ${
-                            currentBannerIndex === index ? 'bg-white w-6 h-2' : 'bg-white/50 w-2 h-2'
+                            currentBannerIndex === index ? 'bg-white w-5 h-1.5' : 'bg-white/50 w-1.5 h-1.5'
                           }`}
-                          aria-label={`Go to banner ${index + 1}`}
                         />
                       ))}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="w-full h-48 rounded-xl bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 flex items-center justify-center shadow-lg">
+                <div className="w-full h-48 bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 flex items-center justify-center">
                   <p className="text-white text-xl font-bold">Welcome to OfferBeez!</p>
                 </div>
               )}
-            </motion.div>
+            </div>
           )}
 
-          {/* All Category Offers Section with Card Layout */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="px-4 mb-6"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-bold text-gray-900">
-                {activeCategory === 'All' ? 'All Category Offers' : `${activeCategory} Offers`}
-              </h2>
-              {filteredOffers.length > 0 && (
+          {/* Best Deals Section - Horizontal Scrolling */}
+          {!showSearchResults && filteredOffers.length > 0 && (
+            <div className="bg-white mb-2 py-4">
+              <div className="flex items-center justify-between px-4 mb-3">
+                <h2 className="text-lg font-bold text-gray-900">
+                  {activeCategory === 'All' ? 'Best Deals for You' : `Best ${activeCategory} Deals`}
+                </h2>
                 <button
-                  onClick={() => onNavigate('allOffers', { title: activeCategory === 'All' ? 'All Category Offers' : `${activeCategory} Offers`, offers: filteredOffers })}
-                  className="text-purple-600 text-sm font-semibold"
+                  onClick={() => onNavigate('allOffers', { title: 'Best Deals', offers: filteredOffers })}
+                  className="text-blue-600 text-sm font-semibold"
                 >
                   View All
                 </button>
+              </div>
+
+              {loadingOffers && <OfferListSkeleton count={3} />}
+
+              {!loadingOffers && offersError && (
+                <div className="text-center py-8 px-4">
+                  <p className="text-gray-600">{offersError}</p>
+                  <button
+                    onClick={() => loadOffers(1, activeCategory)}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {!loadingOffers && !offersError && (
+                <div className="overflow-x-auto px-4 scrollbar-hide">
+                  <div className="flex space-x-4 pb-2">
+                    {filteredOffers.slice(0, 10).map((offer) => (
+                      <div
+                        key={`deal-${offer.id}`}
+                        className="flex-shrink-0 w-44 bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => onNavigate('offerDetails', { offer })}
+                      >
+                        {/* Offer Image */}
+                        <div className="relative w-full h-40 bg-white flex items-center justify-center">
+                          <ImageWithFallback
+                            src={offer.image}
+                            alt={offer.title}
+                            className="w-full h-full object-contain"
+                            fallbackSrc="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200"
+                          />
+                          {offer.discount > 0 && (
+                            <div className="absolute top-2 left-2 bg-green-500 text-black px-2 py-0.5 rounded text-xs font-bold z-10">
+                              {offer.discount}% OFF
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Offer Details */}
+                        <div className="p-2">
+                          <h3 className="font-medium text-xs text-gray-900 line-clamp-2 mb-1">
+                            {offer.title}
+                          </h3>
+
+                          <div className="flex items-center space-x-1 mb-1">
+                            {offer.originalPrice > offer.discountedPrice ? (
+                              <>
+                                <span className="text-sm font-bold text-gray-900">
+                                  ₹{offer.discountedPrice}
+                                </span>
+                                <span className="text-xs text-gray-500 line-through">
+                                  ₹{offer.originalPrice}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-sm font-bold text-gray-900">
+                                ₹{offer.discountedPrice || offer.originalPrice}
+                              </span>
+                            )}
+                          </div>
+
+                          {offer.distance && (
+                            <p className="text-xs text-gray-500">
+                              {parseFloat(offer.distance).toFixed(1)}km away
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
+          )}
 
-            {loadingOffers && <OfferListSkeleton count={3} />}
-
-            {!loadingOffers && offersError && (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-600">{offersError}</p>
+          {/* Ending Soon Deals - Horizontal Scrolling */}
+          {!showSearchResults && endingSoonOffers.length > 0 && (
+            <div className="bg-white mb-2 py-4">
+              <div className="flex items-center justify-between px-4 mb-3">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center">
+                  <Clock className="w-5 h-5 text-red-500 mr-2" />
+                  Ending Soon
+                </h2>
                 <button
-                  onClick={() => loadOffers(1, activeCategory)}
-                  className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  onClick={() => onNavigate('allOffers', { title: 'Ending Soon', offers: endingSoonOffers })}
+                  className="text-blue-600 text-sm font-semibold"
                 >
-                  Retry
+                  View All
                 </button>
               </div>
-            )}
 
-            {!loadingOffers && !offersError && filteredOffers.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                {filteredOffers.slice(0, 6).map((offer) => (
-                  <motion.div
-                    key={`category-${offer.id}`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 cursor-pointer"
-                    onClick={() => onNavigate('offerDetails', { offer })}
-                  >
-                    {/* Offer Image - Perfectly fitted to card */}
-                      <div className="relative w-full aspect-square flex items-center justify-center bg-white rounded-xl">                      <ImageWithFallback
-                        src={offer.image}
-                        alt={offer.title}
-                        className="w-auto h-40 object-contain;"
-                        fallbackSrc="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200"
-                      />
-                      
-                      {/* Discount Badge */}
-                      {offer.discount > 0 && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                          {offer.discount}% OFF
-                        </div>
-                      )}
-                    </div>
+              <div className="overflow-x-auto px-4 scrollbar-hide">
+                <div className="flex space-x-4 pb-2">
+                  {endingSoonOffers.slice(0, 10).map((offer) => (
+                    <div
+                      key={`ending-${offer.id}`}
+                      className="flex-shrink-0 w-44 bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => onNavigate('offerDetails', { offer })}
+                    >
+                      <div className="relative w-full h-40 bg-white flex items-center justify-center">
+                        <ImageWithFallback
+                          src={offer.image}
+                          alt={offer.title}
+                          className="w-full h-full object-contain"
+                          fallbackSrc="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200"
+                        />
+                        {offer.discount > 0 && (
+                          <div className="absolute top-2 left-2 bg-orange-500 text-black px-2 py-0.5 rounded text-xs font-bold z-10">
+                            {offer.discount}% OFF
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Offer Details */}
-                    <div className="p-3">
-                      <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 mb-1">
-                        {offer.title}
-                      </h3>
-                      
-                      <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-                        {offer.description}
-                      </p>
+                      <div className="p-2">
+                        <h3 className="font-medium text-xs text-gray-900 line-clamp-2 mb-1">
+                          {offer.title}
+                        </h3>
 
-                      {/* Price Section */}
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-1 mb-1">
                           {offer.originalPrice > offer.discountedPrice ? (
                             <>
                               <span className="text-sm font-bold text-gray-900">
@@ -864,114 +913,206 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                             </span>
                           )}
                         </div>
-                      </div>
 
-                      {/* Store and Distance */}
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span className="truncate">{offer.storeName || offer.business?.name}</span>
                         {offer.distance && (
-                          <span>{parseFloat(offer.distance).toFixed(1)}km</span>
+                          <p className="text-xs text-gray-500">
+                            {parseFloat(offer.distance).toFixed(1)}km away
+                          </p>
                         )}
                       </div>
                     </div>
-                  </motion.div>
-                ))}
+                  ))}
+                </div>
               </div>
-            )}
+            </div>
+          )}
 
-            {!loadingOffers && !offersError && filteredOffers.length === 0 && (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-600">No offers available within {filterOptions.distance}km</p>
-              </div>
-            )}
-          </motion.div>
-
-          {/* Ending Soon Section */}
-          {endingSoonOffers.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-4 mb-6"
-            >
-              <div className="flex items-center justify-between mb-3">
+          {/* All Offers Section - Grid Layout (3 per row) */}
+          {!showSearchResults && latestOffers.length > 0 && (
+            <div className="bg-white mb-2 py-4">
+              <div className="flex items-center justify-between px-4 mb-3">
                 <h2 className="text-lg font-bold text-gray-900 flex items-center">
-                  <Clock className="w-5 h-5 text-red-500 mr-2" />
-                  Ending Soon
+                  <Star className="w-5 h-5 text-yellow-500 mr-2" />
+                  Top Offers
                 </h2>
                 <button
-                  onClick={() => onNavigate('allOffers', { title: 'Ending Soon Offers', offers: endingSoonOffers })}
-                  className="text-purple-600 text-sm font-semibold"
+                  onClick={() => onNavigate('allOffers', { title: 'All Offers', offers: latestOffers })}
+                  className="text-blue-600 text-sm font-semibold"
                 >
                   View All
                 </button>
               </div>
 
-              <div className="space-y-3">
-                {endingSoonOffers.slice(0, 4).map((offer) => (
-                  <OfferCard
-                    key={`ending-${offer.id}`}
-                    offer={offer}
-                    layout="horizontal"
-                    showTimer={true}
-                    onLike={handleLikeOffer}
-                    onShare={() => handleShare(offer)}
-                    onGetDirections={() => handleGetDirections(offer)}
-                    onClick={() => onNavigate('offerDetails', { offer })}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
+              <div className="px-4">
+                <div className="grid grid-cols-3 gap-4">
+                  {latestOffers.slice(0, 9).map((offer) => (
+                    <div
+                      key={`top-${offer.id}`}
+                      className="bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                      onClick={() => onNavigate('offerDetails', { offer })}
+                    >
+                      <div className="relative w-full h-52 bg-white flex items-center justify-center">
+                        <ImageWithFallback
+                          src={offer.image}
+                          alt={offer.title}
+                          className="w-full h-full object-contain"
+                          fallbackSrc="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200"
+                        />
+                        {offer.discount > 0 && (
+                          <div className="absolute top-2 left-2 bg-green-500 text-black px-2 py-0.5 rounded text-xs font-bold z-10">
+                            {offer.discount}% OFF
+                          </div>
+                        )}
+                      </div>
 
-          {/* Latest Offers Section - With Load More */}
-          {latestOffers.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="px-4 mb-6"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center">
-                  <Star className="w-5 h-5 text-yellow-500 mr-2" />
-                  Latest Offers
-                </h2>
+                      <div className="p-2">
+                        <h3 className="font-medium text-xs text-gray-900 line-clamp-2 mb-1 min-h-[2rem]">
+                          {offer.title}
+                        </h3>
+
+                        <div className="flex items-center space-x-1 mb-1">
+                          {offer.originalPrice > offer.discountedPrice ? (
+                            <>
+                              <span className="text-sm font-bold text-gray-900">
+                                ₹{offer.discountedPrice}
+                              </span>
+                              <span className="text-xs text-gray-500 line-through">
+                                ₹{offer.originalPrice}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-sm font-bold text-gray-900">
+                              ₹{offer.discountedPrice || offer.originalPrice}
+                            </span>
+                          )}
+                        </div>
+
+                        {offer.distance && (
+                          <p className="text-xs text-gray-500">
+                            {parseFloat(offer.distance).toFixed(1)}km away
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                {latestOffers.map((offer) => (
-                  <OfferCard
-                    key={`latest-${offer.id}`}
-                    offer={offer}
-                    onLike={handleLikeOffer}
-                    onGetDirections={() => handleGetDirections(offer)}
-                    onClick={() => onNavigate('offerDetails', { offer })}
-                    className="w-full"
-                    showShare={false} // Remove share button
-                  />
-                ))}
-              </div>
-
-              {/* Load More Button for Latest Offers */}
-              {hasMore && !loadingOffers && (
-                <div className="flex justify-center mt-4">
+              {/* Load More Section */}
+              {hasMore && !loadingOffers && latestOffers.length >= 9 && (
+                <div className="flex justify-center mt-4 px-4">
                   <button
                     onClick={() => loadOffers(page + 1, activeCategory)}
-                    className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-md"
+                    className="px-6 py-2.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors shadow-sm text-sm"
                   >
                     Load More Offers
                   </button>
                 </div>
               )}
 
-              {/* Loading more indicator */}
               {loadingOffers && page > 1 && (
                 <div className="flex justify-center py-4">
-                  <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
-            </motion.div>
+            </div>
+          )}
+
+          {/* No Offers Message */}
+          {!showSearchResults && !loadingOffers && !offersError && filteredOffers.length === 0 && (
+            <div className="bg-white text-center py-12 px-4 mx-2 rounded-lg">
+              <p className="text-gray-600">No offers available within {filterOptions.distance}km</p>
+              <button
+                onClick={() => setShowFilterPanel(true)}
+                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Adjust Distance Filter
+              </button>
+            </div>
           )}
         </div>
+
+        {/* About OfferBeez Section */}
+        <div className="bg-white px-4 py-6 mb-2 ">
+          <div className="max-w-7xl mx-auto  ">
+            <h2 className="text-xl font-bold text-gray-600 mb-4">About OfferBeez – Find the Best offers Near you!</h2>
+
+            <p className="text-sm text-gray-600 leading-relaxed mb-3">
+              OfferBeez is your ultimate local deal finder that helps you explore exclusive offers, discounts, and promotions from nearby stores — all within a 1 km to 10 km range! Whether it's fashion, electronics, food, beauty, or daily essentials, OfferBeez connects you directly to the best stores around you offering amazing deals.
+            </p>
+
+            <p className="text-sm text-gray-600 leading-relaxed mb-4">
+              Find exciting offers shared by registered business owners and verified sales partners on the OfferBeez platform, updated in real time — so you never miss out on a great bargain again!
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                  <h3 className="text-base font-semibold text-gray-400 mb-2">🚶‍♂️ Visit & Save Instantly</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Skip online shopping — with OfferBeez, all offers are in-store only! Simply visit the store, explore the available offers, and purchase directly before the deal or stock ends. Experience the product firsthand for complete satisfaction and trust before you buy.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-gray-400 mb-2">🧵 Discover Hidden Local Gems</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  OfferBeez helps you uncover more than just big-brand offers — explore small-scale businesses, handmade products, and even home services in your local area. You might find amazing items or services you never knew existed right around the corner!
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-gray-400 mb-2">📍 Smart Location-Based Offers</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  OfferBeez automatically detects your location and displays the most relevant offers nearby. You can find store details, addresses, and navigate directly using the built-in map feature to reach your chosen shop quickly and conveniently.
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-gray-400 mb-2">🛍️ Why Choose OfferBeez?</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                  <li>Discover exclusive nearby deals from trusted local stores.</li>
+                  <li>Explore offers within a 1–10 km range based on your location.</li>
+                  <li>Find unique handmade products and small businesses.</li>
+                  <li>Navigate easily with the integrated map and store details.</li>
+                  <li>Get real-time updates on new offers around you.</li>
+                  <li>Support local businesses while saving more.</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-gray-400 mb-2">💡 How OfferBeez Works:</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                  <li>Set your location – Allow the app to detect your area automatically.</li>
+                  <li>Browse offers – View deals and discounts available within your range.</li>
+                  <li>Visit the store – Use the map to reach the location easily.</li>
+                  <li>Purchase directly – Enjoy the best prices and quality while stocks last!</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="text-base font-semibold text-gray-400 mb-2">✨ Why Users Love OfferBeez:</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
+                  <li>Simple, smooth, and user-friendly experience.</li>
+                  <li>Personalized offers based on your area.</li>
+                  <li>Promotes local and small-scale businesses.</li>
+                  <li>Helps you explore unique, authentic, and handmade products.</li>
+                </ul>
+              </div>
+
+              <div className="text-center mt-6">
+                    <p className="text-base font-semibold text-gray-600 mb-1">
+                  Start exploring today and never miss a great local deal again — only with OfferBeez!
+                </p>
+                <p className="text-sm font-medium text-gray-600">
+                  Discover. Visit. Experience. Save.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <Footer onNavigate={onNavigate} />
       </div>
 
       {/* Filter Panel - Simplified with only distance filter */}

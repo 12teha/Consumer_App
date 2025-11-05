@@ -351,7 +351,7 @@ const AppNavigator = memo(function AppNavigator({
           return <FAQScreen onBack={onNavigateBack} />;
 
         case "terms":
-          return <TermsConditionsScreen onBack={onNavigateBack} />;
+          return <TermsConditionsScreen onBack={onNavigateBack} initialSection={screenData?.initialSection} />;
 
         case "locationSetup":
           return (
