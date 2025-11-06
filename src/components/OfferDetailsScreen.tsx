@@ -40,8 +40,20 @@ export default function OfferDetailsScreen({
   const businessAddress = business.address || offer.address;
   const businessLatitude = business.latitude || offer.latitude;
   const businessLongitude = business.longitude || offer.longitude;
-  const businessCategory =
-    business.businessCategory?.categoryName || offer.category;
+
+  // Extract category name from array (businessCategory is an array with categoryName)
+  const businessCategory = React.useMemo(() => {
+    // Check if businessCategory is an array with categoryName
+    if (business.businessCategory && Array.isArray(business.businessCategory) && business.businessCategory.length > 0) {
+      return business.businessCategory[0].categoryName || 'Uncategorized';
+    }
+    // Fallback to single object
+    if (business.businessCategory?.categoryName) {
+      return business.businessCategory.categoryName;
+    }
+    // Fallback to offer.category
+    return offer.category || 'Uncategorized';
+  }, [business.businessCategory, offer.category]);
 
   // Use all uploaded images from the offer
   // API returns 'imagesUrl' array (new format) or 'photos'/'image' (old format)
