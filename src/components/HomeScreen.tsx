@@ -43,6 +43,8 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
   const [adVideoSide, setAdVideoSide] = useState<'left' | 'right'>('left');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [selectedOffer, setSelectedOffer] = useState<any>(null);
   const [showSharePopup, setShowSharePopup] = useState(false);
@@ -261,11 +263,21 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
         }
 
         // Extract category from different possible field names
-        const category = offer.category ||
-                        offer.business?.businessCategory?.categoryName ||
-                        offer.businessCategory?.categoryName ||
-                        offer.categoryName ||
-                        'Uncategorized';
+        // Handle businessCategory as array (from API) or single object
+        let category = offer.category || offer.categoryName || 'Uncategorized';
+
+        // Check if businessCategory is an array
+        if (offer.business?.businessCategory && Array.isArray(offer.business.businessCategory) && offer.business.businessCategory.length > 0) {
+          category = offer.business.businessCategory[0].categoryName || category;
+        } else if (offer.business?.businessCategory?.categoryName) {
+          // Fallback for single object structure
+          category = offer.business.businessCategory.categoryName;
+        } else if (offer.businessCategory && Array.isArray(offer.businessCategory) && offer.businessCategory.length > 0) {
+          category = offer.businessCategory[0].categoryName || category;
+        } else if (offer.businessCategory?.categoryName) {
+          // Fallback for single object structure
+          category = offer.businessCategory.categoryName;
+        }
 
         return {
           ...offer,
@@ -414,9 +426,30 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     return () => clearInterval(interval);
   }, [banners.length]);
 
+  // Real-time search suggestions
+  const handleSearchInput = React.useCallback((query: string) => {
+    setSearchQuery(query);
+
+    if (query.trim()) {
+      const suggestions = offers.filter(offer =>
+        offer.title?.toLowerCase().includes(query.toLowerCase()) ||
+        offer.description?.toLowerCase().includes(query.toLowerCase()) ||
+        offer.category?.toLowerCase().includes(query.toLowerCase()) ||
+        (offer.business?.business_name || offer.businessName)?.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 5); // Limit to 5 suggestions
+
+      setSearchSuggestions(suggestions);
+      setShowSuggestions(true);
+    } else {
+      setSearchSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [offers]);
+
   const handleSearch = React.useCallback((query: string) => {
     try {
       setIsLoading(true);
+      setShowSuggestions(false); // Hide suggestions when performing full search
 
       if (query.trim()) {
         const results = offers.filter(offer =>
@@ -438,11 +471,19 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     }
   }, [offers]);
 
+  const handleSuggestionClick = (offer: any) => {
+    setShowSuggestions(false);
+    setSearchQuery('');
+    onNavigate('offerDetails', { offer });
+  };
+
   const handleClearSearch = () => {
     setSearchQuery('');
     setLocationQuery('');
     setShowSearchResults(false);
     setSearchResults([]);
+    setShowSuggestions(false);
+    setSearchSuggestions([]);
   };
 
   const handleLikeOffer = (offerId: number, liked: boolean) => {
@@ -516,15 +557,15 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
     return applyFilters(baseOffers);
   }, [offers, activeCategory, filterOptions]);
 
-  const endingSoonOffers = React.useMemo(() => 
-    applyFilters(offers.filter(offer => offer.isEndingSoon)),
-    [offers, filterOptions]
-  );
-  
-  const latestOffers = React.useMemo(() =>
-    applyFilters(offers), // Show all offers - no limit
-    [offers, filterOptions]
-  );
+  const endingSoonOffers = React.useMemo(() => {
+    const baseOffers = activeCategory === 'All' ? offers : offers.filter(offer => offer.category === activeCategory);
+    return applyFilters(baseOffers.filter(offer => offer.isEndingSoon));
+  }, [offers, activeCategory, filterOptions]);
+
+  const latestOffers = React.useMemo(() => {
+    const baseOffers = activeCategory === 'All' ? offers : offers.filter(offer => offer.category === activeCategory);
+    return applyFilters(baseOffers); // Show all offers - no limit
+  }, [offers, activeCategory, filterOptions]);
 
   // Remove loading screen - show content immediately with fallback data
 
@@ -613,7 +654,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchInput(e.target.value)}
                 placeholder="Search for offers, stores..."
                 className="flex-1 bg-transparent outline-none text-sm placeholder-gray-500"
                 onKeyPress={(e) => {
@@ -631,6 +672,57 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                 </button>
               )}
             </div>
+
+            {/* Search Suggestions Dropdown */}
+            {showSuggestions && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
+                {searchSuggestions.map((offer, index) => (
+                  <div
+                    key={offer.id || index}
+                    onClick={() => handleSuggestionClick(offer)}
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  >
+                    {/* Offer Image */}
+                    <div className="w-12 h-12 flex-shrink-0">
+                      <ImageWithFallback
+                        src={offer.imagesUrl?.[0] || offer.image || offer.photos?.[0]}
+                        alt={offer.title}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    </div>
+
+                    {/* Offer Details */}
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-semibold text-gray-800 truncate">
+                        {offer.title}
+                      </h4>
+                      <p className="text-xs text-gray-500 truncate">
+                        {offer.business?.business_name || offer.businessName || 'Business'}
+                      </p>
+                      {offer.discountPercentage && (
+                        <span className="inline-block mt-1 text-xs font-semibold text-green-600">
+                          {offer.discountPercentage}% OFF
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Price */}
+                    {offer.discountedPrice && (
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-gray-800">
+                          ₹{offer.discountedPrice}
+                        </p>
+                        {offer.originalPrice && (
+                          <p className="text-xs text-gray-400 line-through">
+                            ₹{offer.originalPrice}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* Filter Button */}
@@ -944,7 +1036,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
 
               <div className="px-4">
                 <div className="grid grid-cols-3 gap-4">
-                  {latestOffers.slice(0, 9).map((offer) => (
+                  {latestOffers.slice(0, 21).map((offer) => (
                     <div
                       key={`top-${offer.id}`}
                       className="bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
