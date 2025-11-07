@@ -367,8 +367,9 @@ export default function OfferDetailsScreen({
                     <p className="text-gray-600 text-xs mt-1">
                       Starts:{" "}
                       {new Date(offer.startDateTime).toLocaleDateString(
-                        "en-IN",
+                        "en-GB",
                         {
+                          timeZone: "UTC" ,
                           day: "numeric",
                           month: "short",
                           year: "numeric",
@@ -381,7 +382,8 @@ export default function OfferDetailsScreen({
                   {offer.endDateTime && (
                     <p className="text-orange-600 text-xs mt-1 font-medium">
                       Expires:{" "}
-                      {new Date(offer.endDateTime).toLocaleDateString("en-IN", {
+                      {new Date(offer.endDateTime).toLocaleDateString("en-GB", {
+                        timeZone: "UTC" ,
                         day: "numeric",
                         month: "short",
                         year: "numeric",
