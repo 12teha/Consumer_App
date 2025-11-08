@@ -9,13 +9,13 @@ interface BottomNavigationProps {
 
 const BottomNavigation = memo(function BottomNavigation({ activeScreen, onNavigate }: BottomNavigationProps) {
   const navigationItems = useMemo(() => [
-    {
+    /*{
       id: 'categorySelection',
       icon: Grid3X3,
       label: 'Category',
       activeColor: 'text-purple-600',
       inactiveColor: 'text-gray-400'
-    },
+    },*/
     {
       id: 'home',
       icon: Home,

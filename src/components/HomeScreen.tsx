@@ -758,6 +758,33 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
             )}
           </motion.div>
         )}
+
+        {/* Browse All Stores Button */}
+        {!showSearchResults && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            onClick={() => onNavigate('allBusinesses', {
+              radius: filterOptions.distance,
+              userLocation: currentLocation
+            })}
+            className="w-full mt-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl p-4 flex items-center justify-between hover:shadow-lg transition-all duration-200 active:scale-98"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <span className="text-2xl">🏪</span>
+              </div>
+              <div className="text-left">
+                <p className="font-bold text-base">Browse All Stores</p>
+                <p className="text-xs text-white/80">Explore all stores near you</p>
+              </div>
+            </div>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </motion.button>
+        )}
       </motion.div>
 
       {/* Scrollable Content Area */}

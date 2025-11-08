@@ -17,6 +17,8 @@ import AllOffersScreen from "./AllOffersScreen";
 import NearbyAreasScreen from "./NearbyAreasScreen";
 import FAQScreen from "./FAQScreen";
 import TermsConditionsScreen from "./TermsConditionsScreen";
+import BrowseCategoriesScreen from "./BrowseCategoriesScreen";
+import BusinessListScreen from "./BusinessListScreen";
 
 type Screen =
   | "permission"
@@ -35,7 +37,10 @@ type Screen =
   | "allOffers"
   | "faq"
   | "terms"
-  | "nearbyAreas";
+  | "nearbyAreas"
+  | "browseCategories"
+  | "businessList"
+  | "allBusinesses";
 
 interface AppNavigatorProps {
   currentScreen: Screen;
@@ -206,6 +211,48 @@ const AppNavigator = memo(function AppNavigator({
               onOfferClick={(offer) => onNavigate("offerDetails", { offer })}
               onLikeCountChange={onLikeCountChange}
               onNavigate={onNavigate}
+            />
+          );
+
+        case "browseCategories":
+          return (
+            <BrowseCategoriesScreen
+              onBack={onNavigateBack}
+              onCategorySelect={(category) => onNavigate("businessList", {
+                category,
+                radius: screenData?.radius || 10,
+                userLocation: screenData?.userLocation
+              })}
+            />
+          );
+
+        case "businessList":
+          return (
+            <BusinessListScreen
+              category={screenData?.category || "All"}
+              radius={screenData?.radius || 10}
+              userLocation={screenData?.userLocation}
+              onBack={onNavigateBack}
+              onBusinessSelect={(businessId) => {
+                // Navigate to business details or offers
+                console.log("Business selected:", businessId);
+                // TODO: Add business details screen navigation
+              }}
+            />
+          );
+
+        case "allBusinesses":
+          return (
+            <BusinessListScreen
+              category="All"
+              radius={screenData?.radius || 10}
+              userLocation={screenData?.userLocation}
+              onBack={onNavigateBack}
+              onBusinessSelect={(businessId) => {
+                // Navigate to business details or offers
+                console.log("Business selected:", businessId);
+                // TODO: Add business details screen navigation
+              }}
             />
           );
 
