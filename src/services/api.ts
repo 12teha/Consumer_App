@@ -270,6 +270,139 @@ class ApiService {
       throw error;
     }
   }
+
+  async getBusinessesByCategory(params: {
+    category: string;
+    radius?: number;
+    lat?: number;
+    lng?: number;
+  }) {
+    try {
+      console.log('🏪 Fetching businesses by category:', params);
+
+      const queryParams = new URLSearchParams();
+      // API doesn't accept category parameter - we'll filter on client side
+      if (params.radius) queryParams.append('radius', params.radius.toString());
+      if (params.lat) queryParams.append('lat', params.lat.toString());
+      if (params.lng) queryParams.append('lng', params.lng.toString());
+
+      // Use the correct endpoint for listing businesses
+      const response = await this.makeRequest(`/user/listbusiness?${queryParams.toString()}`);
+      console.log('✅ Businesses fetched successfully:', response);
+
+      // Handle response data - check multiple possible structures
+      let businessList: any[] = [];
+
+      // API returns { message: '...', businesses: Array(30), total: 30 }
+      if (response.businesses && Array.isArray(response.businesses)) {
+        businessList = response.businesses;
+      } else if (response.data?.businesses && Array.isArray(response.data.businesses)) {
+        businessList = response.data.businesses;
+      } else if (response.data?.businesses1 && Array.isArray(response.data.businesses1)) {
+        businessList = response.data.businesses1;
+      } else if (Array.isArray(response.data)) {
+        businessList = response.data;
+      } else if (Array.isArray(response)) {
+        businessList = response;
+      }
+
+      console.log('📦 Business list extracted:', businessList.length, 'businesses');
+
+      if (businessList.length > 0) {
+        // Transform snake_case properties to camelCase
+        const transformBusiness = (business: any) => {
+          // Extract category name from nested structure
+          let categoryName = '';
+          if (business.businessCategory && Array.isArray(business.businessCategory) && business.businessCategory.length > 0) {
+            categoryName = business.businessCategory[0].categoryName || '';
+          } else {
+            categoryName = business.category || business.categoryName || '';
+          }
+
+          return {
+            id: business.id || '',
+            businessName: business.business_name || 'Unknown Business',
+            ownerName: business.owner_name || 'N/A',
+            phone: business.phone || 'N/A',
+            email: business.email || 'N/A',
+            category: categoryName,
+            address: business.address || 'Address not available',
+            rating: business.rating || 4.0,
+            distance: business.distance || 0,
+            openingHours: business.opening_hours || '9 AM - 9 PM',
+            offerCount: business.offer_count || 0,
+            image: business.panPhotoUrl || business.adharPhotoUrl || business.storePhotoUrl?.[0] || '',
+            latitude: parseFloat(business.latitude) || 0,
+            longitude: parseFloat(business.longitude) || 0,
+          };
+        };
+
+        // If category is "All", return all businesses without filtering
+        if (params.category.toLowerCase() === 'all') {
+          const transformedBusinesses = businessList.map(transformBusiness);
+          console.log(`✅ Returning all ${transformedBusinesses.length} businesses (no category filter)`);
+          console.log('✅ Transformed businesses:', transformedBusinesses);
+          return {
+            success: true,
+            data: transformedBusinesses
+          };
+        }
+
+        console.log('🔍 All businesses before filtering:', businessList.map((b: any) => ({
+          name: b.business_name || b.businessName || b.name,
+          category: b.businessCategory?.[0]?.categoryName || b.category || b.categoryName
+        })));
+
+        const filteredBusinesses = businessList.filter((business: any) => {
+          // Handle nested category structure: businessCategory[0].categoryName
+          let businessCategory = '';
+
+          if (business.businessCategory && Array.isArray(business.businessCategory) && business.businessCategory.length > 0) {
+            businessCategory = business.businessCategory[0].categoryName || '';
+          } else {
+            businessCategory = business.category || business.categoryName || '';
+          }
+
+          console.log(`Comparing: "${businessCategory}" with "${params.category}"`);
+          return businessCategory.toLowerCase() === params.category.toLowerCase();
+        });
+
+        console.log(`✅ Filtered ${filteredBusinesses.length} businesses for category: ${params.category}`);
+
+        // Transform filtered businesses
+        const transformedBusinesses = filteredBusinesses.map(transformBusiness);
+
+        return {
+          success: true,
+          data: transformedBusinesses
+        };
+      } else {
+        // No businesses found
+        console.log('⚠️ No businesses found in list');
+        return {
+          success: true,
+          data: []
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error fetching businesses:', error);
+      throw error;
+    }
+  }
+
+  async getBusinessDetails(businessId: string) {
+    try {
+      console.log('🏪 Fetching business details for:', businessId);
+
+      const response = await this.makeRequest(`/businesses/${businessId}`);
+      console.log('✅ Business details fetched successfully:', response);
+
+      return response;
+    } catch (error) {
+      console.error('❌ Error fetching business details:', error);
+      throw error;
+    }
+  }
 }
 
 export const apiService = new ApiService();

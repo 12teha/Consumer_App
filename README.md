@@ -1,5 +1,22 @@
-Get request to below end point it will return the banner images url those
-can displayed in user app
+https://be.offerlabs.in/api/v1/user/listbusiness
 
 
-https://d24rozqnh2m4pk.cloudfront.net/banners/banners.jsons
+user view business 
+
+GET req
+
+radius will be 10km if its not mentioned
+
+https://be.offerlabs.in/api/v1/user/listbusiness
+
+
+can send the radius in query param 
+
+https://be.offerlabs.in/api/v1/user/listbusiness?radius=5
+
+
+Add Cookie in header: token=YOUR_JWT_TOKEN_HERE
+
+https://be.offerlabs.in/api/v1/details/business/allcategories
+
+Add Cookie in header: token=YOUR_JWT_TOKEN_HERE
