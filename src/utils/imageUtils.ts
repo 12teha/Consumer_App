@@ -26,6 +26,12 @@ export function transformImageUrl(url: string | undefined | null): string {
     return url;
   }
 
+  // Don't transform category icon S3 URLs (obz-icons bucket) - return as-is (public bucket)
+  if (url.includes('obz-icons.s3')) {
+    console.log('🎨 Category icon S3 URL detected, returning as-is:', url);
+    return url;
+  }
+
   // If URL is not from amazonaws.com, return as-is
   if (!url.includes(AMAZONAWS_DOMAIN)) {
     return url;

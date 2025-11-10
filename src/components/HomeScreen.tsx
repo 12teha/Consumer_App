@@ -111,7 +111,10 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
       console.log('Loading categories...');
       const categoriesResponse = await apiService.getAllCategories();
       console.log('Categories response:', categoriesResponse);
+      console.log('Full categories data:', JSON.stringify(categoriesResponse, null, 2));
       const fetchedCategories = categoriesResponse.categories || [];
+      console.log('Fetched categories count:', fetchedCategories.length);
+      console.log('First category structure:', fetchedCategories[0]);
 
       // Store full category data with images
       const allCategory = {
@@ -123,7 +126,22 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
       const categoriesWithImages = fetchedCategories.map((cat: any) => {
         const categoryName = cat.categoryName || cat.name || 'Unknown';
 
-        // Provide category-specific placeholder images
+        // Extract icon URL from API response - check multiple possible field names
+        // Priority order: categoryIconUrl > categoryIcon > icon > image > iconUrl > icon_url
+        let iconUrl = cat.categoryIconUrl || cat.categoryIcon || cat.icon || cat.image || cat.iconUrl || cat.icon_url;
+
+        // Decode URL-encoded characters (replace + with space and decode URI component)
+        if (iconUrl && typeof iconUrl === 'string') {
+          try {
+            // Replace + with %20 for proper URL encoding
+            iconUrl = iconUrl.replace(/\+/g, '%20');
+            console.log('Processed icon URL:', iconUrl);
+          } catch (e) {
+            console.error('Error processing icon URL:', e);
+          }
+        }
+
+        // Provide category-specific placeholder images as fallback
         const categoryImages: { [key: string]: string } = {
           'Clothing': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200',
           'Fashion': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200',
@@ -132,11 +150,15 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
           'Small-Scale Manufacturing': 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=200',
           'Wholesale & Distribution': 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=200',
           'Fashoin': 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=200',
+          'Automotive and Industrial': 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=200',
         };
+
+        console.log('Category:', categoryName, 'Raw cat object:', cat);
+        console.log('Category:', categoryName, 'Final Icon URL:', iconUrl);
 
         return {
           name: categoryName,
-          image: cat.image || categoryImages[categoryName] || 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200'
+          image: iconUrl || categoryImages[categoryName] || 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200'
         };
       });
 
