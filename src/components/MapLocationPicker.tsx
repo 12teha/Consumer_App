@@ -347,7 +347,7 @@ export default function MapLocationPicker({
             </div>
             <button
               onClick={onClose}
-              className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+              className="text-white hover:bg-white/20 rounded-full p-2 transition-colors cursor-pointer"
             >
               <X className="w-6 h-6" />
             </button>
@@ -366,16 +366,29 @@ export default function MapLocationPicker({
                   placeholder="Search for a location (e.g., Indiranagar, Bangalore)"
                   className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                {/* <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" /> */}
+                {/* Clear (X) button inside input */}
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setShowSuggestions(false);
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
 
                 {/* Suggestions Dropdown */}
                 {showSuggestions && searchSuggestions.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50 cursor-pointer">
                     {searchSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.place_id}
                         onClick={() => handleSuggestionClick(suggestion.place_id, suggestion.description)}
-                        className="w-full px-4 py-3 text-left hover:bg-purple-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                        className="w-full px-4 py-3 text-left hover:bg-purple-50 border-b border-gray-100 last:border-b-0 transition-colors cursor-pointer"
                       >
                         <div className="flex items-start space-x-2">
                           <MapPin className="w-4 h-4 text-purple-600 mt-1 flex-shrink-0" />
@@ -396,7 +409,7 @@ export default function MapLocationPicker({
               <Button
                 onClick={handleSearch}
                 disabled={isSearching}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700 cursor-pointer"
               >
                 {isSearching ? <Loader className="w-4 h-4 animate-spin" /> : 'Search'}
               </Button>
@@ -489,7 +502,7 @@ export default function MapLocationPicker({
               <Button
                 onClick={handleUseLocation}
                 disabled={!selectedLocation}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 cursor-pointer"
               >
                 <MapPin className="w-4 h-4 mr-2" />
                 Use This Location
