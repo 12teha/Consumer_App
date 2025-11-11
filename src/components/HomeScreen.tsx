@@ -626,7 +626,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
           </motion.div>
         </div>
 
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 cursor-pointer">
           <LocationButton
             address={formatAddress(currentLocation?.address) || "Tap to set your location"}
             city=""
@@ -635,7 +635,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
 
           <div className="flex items-center space-x-3">
             <button onClick={() => onNavigate('profile')}>
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center cursor-pointer">
                 <span className="text-white text-sm font-semibold">
                   {username.charAt(0).toUpperCase()}
                 </span>
@@ -678,7 +678,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                 value={searchQuery}
                 onChange={(e) => handleSearchInput(e.target.value)}
                 placeholder="Search for offers, stores..."
-                className="flex-1 bg-transparent outline-none text-sm placeholder-gray-500"
+                className="flex-1 bg-transparent outline-none text-sm placeholder-gray-500 cursor-pointer"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     handleSearch(searchQuery);
@@ -688,7 +688,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
               {searchQuery && (
                 <button
                   onClick={handleClearSearch}
-                  className="ml-2 text-gray-400 hover:text-gray-600"
+                  className="ml-2 text-gray-400 hover:text-gray-600 cursor-pointer"
                 >
                   ×
                 </button>
@@ -697,7 +697,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
 
             {/* Search Suggestions Dropdown */}
             {showSuggestions && searchSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50">
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto z-50 cursor-pointer">
                 {searchSuggestions.map((offer, index) => (
                   <div
                     key={offer.id || index}
@@ -750,7 +750,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
           {/* Filter Button */}
           <button
             onClick={() => setShowFilterPanel(true)}
-            className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
           >
             <Filter className="w-5 h-5 text-gray-600" />
           </button>
@@ -791,7 +791,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
               radius: filterOptions.distance,
               userLocation: currentLocation
             })}
-            className="w-full mt-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl p-4 flex items-center justify-between hover:shadow-lg transition-all duration-200 active:scale-98"
+            className="w-full mt-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl p-4 flex items-center justify-between hover:shadow-lg transition-all duration-200 active:scale-98 cursor-pointer"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -851,7 +851,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
               {loadingBanners ? (
                 <div className="w-full h-64 bg-gray-200 animate-pulse"></div>
               ) : banners.length > 0 ? (
-                <div className="relative w-full overflow-hidden cursor-pointer" style={{ height: '250px' }}>
+                <div className="relative w-full overflow-hidden" style={{ height: '250px' }}>
                   {/* Banner Images */}
                   {banners.map((banner, index) => (
                     <div
@@ -1077,7 +1077,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                 </h2>
                 <button
                   onClick={() => onNavigate('allOffers', { title: 'All Offers', offers: latestOffers })}
-                  className="text-blue-600 text-sm font-semibold"
+                  className="text-blue-600 text-sm font-semibold cursor-pointer"
                 >
                   View All
                 </button>

@@ -1,3 +1,99 @@
+// import React, { useState, useEffect } from 'react';
+// import { motion, AnimatePresence } from 'motion/react';
+// import { MapPin } from 'lucide-react';
+
+// interface LocationButtonProps {
+//   address: string;
+//   city: string;
+//   onClick?: () => void;
+//   className?: string;
+// }
+
+// export default function LocationButton({ address, city, onClick, className = "" }: LocationButtonProps) {
+//   const [isLoading, setIsLoading] = useState(false);
+//   const [currentAddress, setCurrentAddress] = useState(address);
+
+//   // Update currentAddress when address prop changes
+//   useEffect(() => {
+//     setCurrentAddress(address);
+//   }, [address]);
+
+//   const bangaloreAddresses = [
+//     'Koramangala 4th Block, Bangalore',
+//     'HSR Layout, Bangalore',
+//     'BTM Layout, Bangalore',
+//     'Indiranagar, Bangalore',
+//     'MG Road, Bangalore',
+//     'Whitefield, Bangalore',
+//     'Electronic City, Bangalore'
+//   ];
+
+//   const handleClick = () => {
+//     setIsLoading(true);
+    
+//     // Simulate fetching location
+//     setTimeout(() => {
+//       const randomAddress = bangaloreAddresses[Math.floor(Math.random() * bangaloreAddresses.length)];
+//       setCurrentAddress(randomAddress);
+//       setIsLoading(false);
+//     }, 2000);
+    
+//     onClick?.();
+//   };
+
+//   return (
+//     <motion.button
+//       whileTap={{ scale: 0.95 }}
+//       onClick={handleClick}
+//       className={`flex items-center space-x-2 flex-1 max-w-[60%] ${className}`}
+//     >
+//       <motion.div
+//         animate={isLoading ? { rotate: 360 } : {}}
+//         transition={isLoading ? { duration: 1, repeat: Infinity, ease: "linear" } : {}}
+//       >
+//         <MapPin className="w-5 h-5 text-red-500" />
+//       </motion.div>
+//       <div className="text-left">
+//         <AnimatePresence mode="wait">
+//           {isLoading ? (
+//             <motion.div
+//               key="loading"
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               exit={{ opacity: 0, y: -10 }}
+//             >
+//               <p className="text-sm font-semibold text-gray-900">Detecting location...</p>
+//               <motion.div 
+//                 className="h-1 bg-gray-200 rounded-full mt-1 overflow-hidden"
+//                 initial={{ width: 0 }}
+//               >
+//                 <motion.div
+//                   className="h-full bg-red-500 rounded-full"
+//                   animate={{ width: '100%' }}
+//                   transition={{ duration: 2, ease: "easeInOut" }}
+//                 />
+//               </motion.div>
+//             </motion.div>
+//           ) : (
+//             <motion.div
+//               key="address"
+//               initial={{ opacity: 0, y: 10 }}
+//               animate={{ opacity: 1, y: 0 }}
+//               exit={{ opacity: 0, y: -10 }}
+//               className="flex-1 min-w-0"
+//             >
+//               <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{currentAddress}</p>
+//               {city && <p className="text-xs text-gray-500 truncate">{city}</p>}
+//             </motion.div>
+//           )}
+//         </AnimatePresence>
+//       </div>
+//     </motion.button>
+//   );
+// }
+
+//////////////
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin } from 'lucide-react';
@@ -15,29 +111,25 @@ export default function LocationButton({ address, city, onClick, className = "" 
 
   // Update currentAddress when address prop changes
   useEffect(() => {
+    console.log('📍 LocationButton received new address:', address);
     setCurrentAddress(address);
   }, [address]);
 
-  const bangaloreAddresses = [
-    'Koramangala 4th Block, Bangalore',
-    'HSR Layout, Bangalore',
-    'BTM Layout, Bangalore',
-    'Indiranagar, Bangalore',
-    'MG Road, Bangalore',
-    'Whitefield, Bangalore',
-    'Electronic City, Bangalore'
-  ];
-
   const handleClick = () => {
+    console.log('📍 Location button clicked, current address:', currentAddress);
+    
+    // Only show loading if we're actually going to fetch location
+    // But since we're not randomly changing location anymore, we can skip this
+    // or keep minimal loading for user feedback
+    
     setIsLoading(true);
     
-    // Simulate fetching location
+    // Simulate minimal loading for better UX
     setTimeout(() => {
-      const randomAddress = bangaloreAddresses[Math.floor(Math.random() * bangaloreAddresses.length)];
-      setCurrentAddress(randomAddress);
       setIsLoading(false);
-    }, 2000);
+    }, 500);
     
+    // Call the parent onClick handler (which should open map picker)
     onClick?.();
   };
 
@@ -46,6 +138,7 @@ export default function LocationButton({ address, city, onClick, className = "" 
       whileTap={{ scale: 0.95 }}
       onClick={handleClick}
       className={`flex items-center space-x-2 flex-1 max-w-[60%] ${className}`}
+      title={currentAddress || "Tap to set location"}
     >
       <motion.div
         animate={isLoading ? { rotate: 360 } : {}}
@@ -53,7 +146,7 @@ export default function LocationButton({ address, city, onClick, className = "" 
       >
         <MapPin className="w-5 h-5 text-red-500" />
       </motion.div>
-      <div className="text-left">
+      <div className="text-left flex-1 min-w-0">
         <AnimatePresence mode="wait">
           {isLoading ? (
             <motion.div
@@ -61,8 +154,9 @@ export default function LocationButton({ address, city, onClick, className = "" 
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
+              className="flex-1"
             >
-              <p className="text-sm font-semibold text-gray-900">Detecting location...</p>
+              <p className="text-sm font-semibold text-gray-900">Opening map...</p>
               <motion.div 
                 className="h-1 bg-gray-200 rounded-full mt-1 overflow-hidden"
                 initial={{ width: 0 }}
@@ -70,7 +164,7 @@ export default function LocationButton({ address, city, onClick, className = "" 
                 <motion.div
                   className="h-full bg-red-500 rounded-full"
                   animate={{ width: '100%' }}
-                  transition={{ duration: 2, ease: "easeInOut" }}
+                  transition={{ duration: 0.5, ease: "easeInOut" }}
                 />
               </motion.div>
             </motion.div>
@@ -82,7 +176,9 @@ export default function LocationButton({ address, city, onClick, className = "" 
               exit={{ opacity: 0, y: -10 }}
               className="flex-1 min-w-0"
             >
-              <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{currentAddress}</p>
+              <p className="text-sm font-semibold text-gray-900 truncate leading-tight" title={currentAddress}>
+                {currentAddress || "Tap to set location"}
+              </p>
               {city && <p className="text-xs text-gray-500 truncate">{city}</p>}
             </motion.div>
           )}
