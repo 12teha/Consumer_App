@@ -56,6 +56,7 @@
     server: {
       port: 3000,
       open: true,
+      allowedHosts: ['consumer.offerbeez.in'],
       proxy: {
         '/api/banners': {
           target: 'https://ofb-banners.s3.ap-south-1.amazonaws.com',

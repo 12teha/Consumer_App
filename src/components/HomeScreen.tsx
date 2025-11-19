@@ -78,7 +78,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
   const [loadingBanners, setLoadingBanners] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    distance: 10 // Only distance filter
+    distance: 25 // Only distance filter
   });
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -543,8 +543,8 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
   const applyFilters = (offersToFilter: any[]) => {
     let filtered = [...offersToFilter];
 
-    // Apply distance filter - only show offers within selected distance (up to 10km)
-    if (filterOptions.distance < 10) {
+    // Apply distance filter - only show offers within selected distance (up to 25km)
+    if (filterOptions.distance < 25) {
       filtered = filtered.filter(offer => {
         const offerDistance = parseFloat(offer.distance) || 0;
         return offerDistance <= filterOptions.distance;
@@ -565,7 +565,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
 
   const handleFilterReset = () => {
     setFilterOptions({
-      distance: 10 // Reset to 10km
+      distance: 25 // Reset to 25km
     });
     // Reload offers with reset filter
     setOffers([]);
@@ -1293,7 +1293,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                   <input
                     type="range"
                     min="1"
-                    max="10"
+                    max="25"
                     step="1"
                     value={filterOptions.distance}
                     onChange={(e) => setFilterOptions(prev => ({
@@ -1304,7 +1304,7 @@ const HomeScreen = React.memo(function HomeScreen({ username, selectedCategory, 
                   />
                   <div className="flex justify-between text-sm text-gray-600">
                     <span>1 km</span>
-                    <span>10 km</span>
+                    <span>25 km</span>
                   </div>
                   <p className="text-sm text-gray-500 mt-2">
                     Show offers within {filterOptions.distance} km of your location
