@@ -231,7 +231,7 @@ export default function App() {
   const [email, setEmail] = useState<string>(initialAuth.email);
   const [screenData, setScreenData] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(initialAuth.isAuthenticated);
-
+  
 
   const handleLikeCountChange = useCallback((count: number) => {
     setLikedOffersCount(count);

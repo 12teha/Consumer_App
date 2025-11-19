@@ -26,7 +26,7 @@ const Footer = ({ onNavigate }: FooterProps) => {
               <li>
                 <button
                   onClick={() => setShowContactPopup(true)}
-                  className="text-white-200 hover:text-white transition-colors text-left"
+                  className="text-white-200 hover:text-white transition-colors text-left cursor-pointer"
                 >
                   Contact Us
                 </button>
@@ -34,7 +34,7 @@ const Footer = ({ onNavigate }: FooterProps) => {
               <li>
                 <button
                   onClick={() => onNavigate?.('faq')}
-                  className="text-white-200 hover:text-white transition-colors text-left"
+                  className="text-white-200 hover:text-white transition-colors text-left cursor-pointer"
                 >
                   FAQ
                 </button>
@@ -49,7 +49,7 @@ const Footer = ({ onNavigate }: FooterProps) => {
               <li>
                 <button
                   onClick={() => onNavigate?.('terms', { initialSection: 'terms' })}
-                  className="text-white-200 hover:text-white transition-colors text-left"
+                  className="text-white-200 hover:text-white transition-colors text-left cursor-pointer"
                 >
                   Terms & Conditions
                 </button>
@@ -58,7 +58,7 @@ const Footer = ({ onNavigate }: FooterProps) => {
               <li>
                 <button
                   onClick={() => onNavigate?.('terms', { initialSection: 'privacy' })}
-                  className="text-white-200 hover:text-white transition-colors text-left"
+                  className="text-white-200 hover:text-white transition-colors text-left cursor-pointer"
                 >
                   Privacy Policy
                 </button>

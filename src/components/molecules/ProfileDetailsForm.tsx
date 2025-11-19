@@ -662,7 +662,7 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
           return 'Email cannot exceed 100 characters';
         }
         if (!isValidEmail(value)) {
-          return 'Please enter a valid email address (e.g., example@domain.com)';
+           return 'Please enter a valid email address (e.g., example@domain.com)';
         }
         return '';
       
@@ -844,7 +844,7 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
         className="bg-white px-4 py-3 shadow-sm flex items-center justify-between"
       >
         <button onClick={onBack} className="p-2 -ml-2">
-          <ArrowLeft className="w-6 h-6 text-gray-600" />
+          <ArrowLeft className="w-6 h-6 text-gray-600 cursor-pointer" />
         </button>
         <h1 className="text-lg font-semibold text-gray-900">Profile Details</h1>
         <div className="w-8" /> {/* Spacer */}

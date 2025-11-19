@@ -120,7 +120,7 @@ export default function BusinessListScreen({
         <div className="flex items-center p-4">
           <button
             onClick={onBack}
-            className="mr-3 p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="mr-3 p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
@@ -131,6 +131,9 @@ export default function BusinessListScreen({
             </p>
           </div>
         </div>
+
+  
+
 
         {/* Search Bar */}
         <div className="px-4 pb-4">
@@ -276,3 +279,5 @@ export default function BusinessListScreen({
     </div>
   );
 }
+
+

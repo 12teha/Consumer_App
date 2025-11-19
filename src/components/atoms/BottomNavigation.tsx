@@ -45,7 +45,7 @@ const BottomNavigation = memo(function BottomNavigation({ activeScreen, onNaviga
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className="flex flex-col items-center space-y-1 py-2 min-w-0 flex-1"
+              className="flex flex-col items-center space-y-1 py-2 min-w-0 flex-1 cursor-pointer"
             >
               <motion.div
                 whileHover={{ scale: 1.1 }}
