@@ -351,6 +351,7 @@ export default function AllOffersScreen({
             {/* <span className="text-sm font-medium text-gray-600">Back</span> */}
           </button>
           
+          {/* best deal heading */}
           <h1 className="text-lg font-bold text-gray-900 flex-1 text-center">
             {title}
           </h1>

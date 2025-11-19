@@ -402,19 +402,63 @@ export default function ProfileScreen({
     onNavigate("phone");
   };
 
-  const handleDeleteAccount = () => {
-    setShowDeleteAccountDialog(false);
-    // Add your account deletion logic here
-    console.log("Account deletion requested for:", username);
+  // const handleDeleteAccount = () => {
+  //   setShowDeleteAccountDialog(false);
+  //   // Add your account deletion logic here
+  //   console.log("Account deletion requested for:", username);
 
-    // Clear authentication session
+  //   // Clear authentication session
+  //   authService.clearAuth();
+  //   // Navigate to welcome screen
+  //   onNavigate("welcome");
+
+  //   // You can add API call to delete account here
+  //   // await apiService.deleteAccount();
+  // };
+
+  const handleDeleteAccount = async () => {
+  setShowDeleteAccountDialog(false);
+
+  try {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to permanently delete your OfferBeez account? This action cannot be undone."
+    );
+    if (!confirmDelete) return;
+
+    const token = authService.getToken?.() || localStorage.getItem("token");
+
+    const response = await fetch("https://be.offerlabs.in/api/v1/user/profile/delete", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      credentials: "include", // important if your backend uses cookies
+    });
+
+    if (response.status === 401) {
+      alert("❌ Unauthorized! Please log in again.");
+      authService.clearAuth();
+      onNavigate("phone");
+      return;
+    }
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || "Failed to delete account.");
+    }
+
+    alert("✅ Your account has been successfully deleted.");
+
     authService.clearAuth();
-    // Navigate to welcome screen
     onNavigate("welcome");
+  } catch (error: any) {
+    console.error("Account deletion failed:", error);
+    alert(error.message || "❌ Something went wrong while deleting your account.");
+  }
+};
 
-    // You can add API call to delete account here
-    // await apiService.deleteAccount();
-  };
+
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
