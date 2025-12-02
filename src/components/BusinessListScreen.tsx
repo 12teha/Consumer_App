@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, MapPin, Star, Clock, ChevronRight, Loader2, Search, Navigation, Phone, User, Mail } from 'lucide-react';
+import { ArrowLeft, MapPin, Star, Clock, ChevronRight, Loader2, Search,X, Navigation, Phone, User, Mail } from 'lucide-react';
 import { apiService } from '../services/api';
 
 interface Business {
@@ -137,17 +137,30 @@ export default function BusinessListScreen({
 
         {/* Search Bar */}
         <div className="px-4 pb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search stores..."
-              className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
+  <div className="relative">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+    <input
+      type="text"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      placeholder="Search stores..."
+      className="w-full px-4 py-2 pl-10 pr-10 border border-gray-300 rounded-lg 
+                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    />
+
+    {searchQuery.length > 0 && (
+      <button
+        onClick={() => setSearchQuery("")}
+        className="absolute right-3 top-1/2 -translate-y-1/2 
+                   text-gray-400 hover:text-gray-600"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    )}
+  </div>
+</div>
+
       </div>
 
       {/* Content - Scrollable */}

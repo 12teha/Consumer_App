@@ -546,6 +546,8 @@
 //     </div>
 //   );
 // }
+
+
 /////////////
 
 import React, { useState, useEffect } from 'react';
@@ -575,7 +577,6 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
     memberSince: '',
     isVerified: false,
     avatar: '',
-    ...initialData
   });
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({
@@ -583,17 +584,26 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
     email: ''
   });
   const [profileCompleteness, setProfileCompleteness] = useState(0);
+  const [hasUserInteracted, setHasUserInteracted] = useState({
+    username: false,
+    email: false,
+    phone: false
+  });
 
-  // Initialize or update form data when initialData changes
+  // Initialize form data - clear any default email values
   useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      ...initialData,
-      // Ensure we have default values for dynamic fields
-      memberSince: initialData.memberSince || getDefaultMemberSince(),
-      isVerified: initialData.isVerified !== undefined ? initialData.isVerified : true,
-      avatar: initialData.avatar || ''
-    }));
+    const cleanInitialData = {
+      username: initialData.username || '',
+      email: '', // Always start with empty email
+      phone: initialData.phone || '',
+      // memberSince: initialData.memberSince || getDefaultMemberSince(),
+      memberSince: initialData.memberSince || '',
+
+      isVerified: false, // Start as unverified since email is empty
+      avatar: initialData.avatar || '',
+    };
+
+    setFormData(cleanInitialData);
   }, [initialData]);
 
   // Calculate profile completeness whenever form data changes
@@ -629,6 +639,7 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
 
   // Enhanced email validation function
   const isValidEmail = (email: string): boolean => {
+    if (!email.trim()) return false;
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailRegex.test(email) && email.length >= 6 && email.length <= 100;
   };
@@ -671,8 +682,11 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
     }
   };
 
-  // Handle field changes with validation
+  // Handle field changes with validation and user interaction tracking
   const handleFieldChange = (field: string, value: string) => {
+    // Mark field as interacted
+    setHasUserInteracted(prev => ({ ...prev, [field]: true }));
+
     // For username field - only allow A-Z, a-z, and spaces
     if (field === 'username') {
       // Restrict to only letters and spaces
@@ -723,6 +737,16 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
       } else if (emailValid || phoneValid) {
         setFormData(prev => ({ ...prev, isVerified: false }));
       }
+    }
+  };
+
+  // Handle field blur for validation
+  const handleFieldBlur = (field: string) => {
+    setHasUserInteracted(prev => ({ ...prev, [field]: true }));
+    
+    if (field === 'username' || field === 'email') {
+      const error = validateField(field, formData[field]);
+      setFieldErrors(prev => ({ ...prev, [field]: error }));
     }
   };
 
@@ -788,6 +812,13 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
   };
 
   const handleSave = async () => {
+    // Mark all fields as interacted to show all errors
+    setHasUserInteracted({
+      username: true,
+      email: true,
+      phone: true
+    });
+
     // Validate all fields before saving
     const usernameError = validateField('username', formData.username);
     const emailError = validateField('email', formData.email);
@@ -805,13 +836,20 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
     setIsLoading(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Set memberSince only if it's empty
+  const fixedMemberSince =
+    formData.memberSince && formData.memberSince.trim() !== ""
+      ? formData.memberSince
+      : new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
     
     // Auto-verify if all fields are valid
     const finalData = {
       username: formData.username,
       email: formData.email,
       phone: formData.phone,
-      memberSince: formData.memberSince,
+      memberSince: fixedMemberSince,
       isVerified: isValidEmail(formData.email) && 
                  formData.phone.length === 10 && 
                  formData.username.trim().length >= 1 && 
@@ -834,6 +872,28 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
                      /^\d+$/.test(formData.phone);
 
   const verificationInfo = getVerificationStatus();
+
+  // Show error only if user has interacted with the field
+  const shouldShowError = (field: 'username' | 'email') => {
+    return hasUserInteracted[field] && fieldErrors[field];
+  };
+
+  // Show success only if field is valid and user has interacted
+  const shouldShowSuccess = (field: 'username' | 'email') => {
+    if (field === 'username') {
+      return hasUserInteracted.username && 
+             formData.username.trim().length >= 1 && 
+             formData.username.trim().length <= 100 && 
+             /^[A-Za-z\s]+$/.test(formData.username) && 
+             !fieldErrors.username;
+    }
+    if (field === 'email') {
+      return hasUserInteracted.email && 
+             isValidEmail(formData.email) && 
+             !fieldErrors.email;
+    }
+    return false;
+  };
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
@@ -886,11 +946,12 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
               <Input
                 value={formData.username}
                 onChange={(e) => handleFieldChange('username', e.target.value)}
+                onBlur={() => handleFieldBlur('username')}
                 placeholder="Enter your full name (letters and spaces only)"
-                className={`w-full ${fieldErrors.username ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                className={`w-full ${shouldShowError('username') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 maxLength={100}
               />
-              {fieldErrors.username && (
+              {shouldShowError('username') && (
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -899,7 +960,7 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
                   • {fieldErrors.username}
                 </motion.p>
               )}
-              {!fieldErrors.username && formData.username && formData.username.length >= 1 && /^[A-Za-z\s]+$/.test(formData.username) && (
+              {shouldShowSuccess('username') && (
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -928,11 +989,12 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleFieldChange('email', e.target.value)}
-                placeholder="Enter your email address (e.g., example@domain.com)"
-                className={`w-full ${fieldErrors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                onBlur={() => handleFieldBlur('email')}
+                placeholder="Enter your email address"
+                className={`w-full ${shouldShowError('email') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                 maxLength={100}
               />
-              {fieldErrors.email && (
+              {shouldShowError('email') && (
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -941,7 +1003,7 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
                   • {fieldErrors.email}
                 </motion.p>
               )}
-              {!fieldErrors.email && isValidEmail(formData.email) && (
+              {shouldShowSuccess('email') && (
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -951,7 +1013,7 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
                   Valid email format
                 </motion.p>
               )}
-              {formData.email && !isValidEmail(formData.email) && !fieldErrors.email && (
+              {hasUserInteracted.email && formData.email && !isValidEmail(formData.email) && !fieldErrors.email && (
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -965,7 +1027,7 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
               </p>
             </div>
 
-           {/* Phone */}
+            {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <Phone className="w-4 h-4 inline mr-2" />
@@ -983,12 +1045,13 @@ export default function ProfileDetailsForm({ initialData, onBack, onSave }: Prof
                     const value = e.target.value.replace(/\D/g, '').slice(0, 10);
                     handleFieldChange('phone', value);
                   }}
+                  onBlur={() => handleFieldBlur('phone')}
                   placeholder="Phone number"
                   className="flex-1"
                   maxLength={10}
                 />
               </div>
-              {formData.phone.length === 10 && (
+              {hasUserInteracted.phone && formData.phone.length === 10 && (
                 <motion.p
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}

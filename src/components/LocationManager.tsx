@@ -584,7 +584,6 @@ export default function LocationManager({ onLocationSet, onSkip, showSkip = fals
       </div>
     );
   }
-
-  // If location is set successfully, don't render anything (component has done its job)
+  
   return null;
 }
