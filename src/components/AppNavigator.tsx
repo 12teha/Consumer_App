@@ -299,9 +299,11 @@
 
 /////////////
 
+"use client";
 
 import React, { memo, useMemo } from "react";
 import { motion } from "motion/react";
+
 import PermissionPopup from "./PermissionPopup";
 import WelcomeScreen from "./WelcomeScreen";
 import PhoneEntryScreen from "./PhoneEntryScreen";
@@ -321,6 +323,12 @@ import FAQScreen from "./FAQScreen";
 import TermsConditionsScreen from "./TermsConditionsScreen";
 import BrowseCategoriesScreen from "./BrowseCategoriesScreen";
 import BusinessListScreen from "./BusinessListScreen";
+import DiscountedOffersScreen from "./DiscountedOffersScreen";
+import FlatOffersScreen from "./FlatOffersScreen";
+import ExchangeOffersScreen from "./ExchangeOffersScreen";
+import UpTo50OffersScreen from "./UpTo50OffersScreen";
+import ListingsScreen from "./ListingsScreen";
+import OffersListScreen from "./OfferlistScreen";
 
 type Screen =
   | "permission"
@@ -342,7 +350,13 @@ type Screen =
   | "nearbyAreas"
   | "browseCategories"
   | "businessList"
-  | "allBusinesses";
+  | "allBusinesses"
+  | "discountedOffers"
+  | "flatOffers"
+  | "exchangeOffers"
+  | "upTo50Offers"
+  | "storeListing"
+  | "offersList";
 
 interface AppNavigatorProps {
   currentScreen: Screen;
@@ -379,32 +393,18 @@ const AppNavigator = memo(function AppNavigator({
   onSaveProfile,
   onNavigateBack,
 }: AppNavigatorProps) {
-  // Handle back navigation specifically for offer details to always go to home
-  const handleOfferDetailsBack = () => {
-    onNavigate("home");
-  };
+  const handleOfferDetailsBack = () => onNavigate("home");
+  const handleAllOffersBack = () => onNavigate("home");
+  const handleOTPBack = () => onNavigate("phone");
+  const handleAlmostDoneBack = () => onNavigate("otp");
+  const handleCategorySelectionBack = () => onNavigate("locationSetup");
 
-  // Handle back navigation for AllOffersScreen to always go to home
-  const handleAllOffersBack = () => {
-    onNavigate("home");
-  };
+  // Handlers for specialized offer screens back navigation
+  const handleDiscountedOffersBack = () => onNavigate("home");
+  const handleFlatOffersBack = () => onNavigate("home");
+  const handleExchangeOffersBack = () => onNavigate("home");
+  const handleUpTo50OffersBack = () => onNavigate("home");
 
-  // Handle OTP back navigation - go back to phone entry
-  const handleOTPBack = () => {
-    onNavigate("phone");
-  };
-
-  // Handle almost done back navigation - go back to OTP
-  const handleAlmostDoneBack = () => {
-    onNavigate("otp");
-  };
-
-  // Handle category selection back navigation
-  const handleCategorySelectionBack = () => {
-    onNavigate("locationSetup");
-  };
-
-  // Memoize the screen component to prevent unnecessary re-creation
   const screenComponent = useMemo(() => {
     try {
       switch (currentScreen) {
@@ -413,16 +413,16 @@ const AppNavigator = memo(function AppNavigator({
 
         case "welcome":
           return (
-            <WelcomeScreen 
-              onComplete={() => onNavigate("phone")} 
+            <WelcomeScreen
+              onComplete={() => onNavigate("phone")}
               onBack={onNavigateBack}
             />
           );
 
         case "phone":
           return (
-            <PhoneEntryScreen 
-              onComplete={onPhoneComplete} 
+            <PhoneEntryScreen
+              onComplete={onPhoneComplete}
               onBack={onNavigateBack}
             />
           );
@@ -438,8 +438,8 @@ const AppNavigator = memo(function AppNavigator({
 
         case "almostDone":
           return (
-            <AlmostDoneScreen 
-              onComplete={onUsernameComplete} 
+            <AlmostDoneScreen
+              onComplete={onUsernameComplete}
               onBack={handleAlmostDoneBack}
             />
           );
@@ -449,9 +449,9 @@ const AppNavigator = memo(function AppNavigator({
 
         case "terms":
           return (
-            <TermsConditionsScreen 
-              onBack={onNavigateBack} 
-              initialSection={screenData?.initialSection} 
+            <TermsConditionsScreen
+              onBack={onNavigateBack}
+              initialSection={screenData?.initialSection}
             />
           );
 
@@ -519,10 +519,7 @@ const AppNavigator = memo(function AppNavigator({
 
         case "location":
           return (
-            <LocationScreen 
-              onBack={onNavigateBack} 
-              onNavigate={onNavigate} 
-            />
+            <LocationScreen onBack={onNavigateBack} onNavigate={onNavigate} />
           );
 
         case "likedOffers":
@@ -560,11 +557,13 @@ const AppNavigator = memo(function AppNavigator({
           return (
             <BrowseCategoriesScreen
               onBack={onNavigateBack}
-              onCategorySelect={(category) => onNavigate("businessList", {
-                category,
-                radius: screenData?.radius || 10,
-                userLocation: screenData?.userLocation
-              })}
+              onCategorySelect={(category) =>
+                onNavigate("businessList", {
+                  category,
+                  radius: screenData?.radius || 10,
+                  userLocation: screenData?.userLocation,
+                })
+              }
             />
           );
 
@@ -575,11 +574,7 @@ const AppNavigator = memo(function AppNavigator({
               radius={screenData?.radius || 10}
               userLocation={screenData?.userLocation}
               onBack={onNavigateBack}
-              onBusinessSelect={(businessId) => {
-                // Navigate to business details or offers
-                console.log("Business selected:", businessId);
-                // TODO: Add business details screen navigation
-              }}
+              onBusinessSelect={(id) => console.log("Business selected:", id)}
             />
           );
 
@@ -590,11 +585,57 @@ const AppNavigator = memo(function AppNavigator({
               radius={screenData?.radius || 10}
               userLocation={screenData?.userLocation}
               onBack={onNavigateBack}
-              onBusinessSelect={(businessId) => {
-                // Navigate to business details or offers
-                console.log("Business selected:", businessId);
-                // TODO: Add business details screen navigation
-              }}
+              onBusinessSelect={(id) => console.log("Business:", id)}
+            />
+          );
+
+        case "discountedOffers":
+          return (
+            <DiscountedOffersScreen
+              onNavigate={onNavigate}
+              onBack={handleDiscountedOffersBack}
+              username={username}
+            />
+          );
+
+        case "flatOffers":
+          return (
+            <FlatOffersScreen
+              onNavigate={onNavigate}
+              onBack={handleFlatOffersBack}
+              username={username}
+            />
+          );
+
+        case "exchangeOffers":
+          return (
+            <ExchangeOffersScreen
+              onNavigate={onNavigate}
+              onBack={handleExchangeOffersBack}
+              username={username}
+            />
+          );
+
+        case "upTo50Offers":
+          return (
+            <UpTo50OffersScreen
+              onNavigate={onNavigate}
+              onBack={handleUpTo50OffersBack}
+              username={username}
+            />
+          );
+
+        case "storeListing":
+          return <ListingsScreen onNavigate={onNavigate} />;
+
+        case "offersList":
+          return (
+            <OffersListScreen
+              title={screenData?.title || "All Offers"}
+              offerType={screenData?.offerType || null}
+              category={screenData?.category || null}
+              onBack={() => onNavigate("home")}
+              onOfferClick={(offer) => onNavigate("offerDetails", { offer })}
             />
           );
 
@@ -602,18 +643,10 @@ const AppNavigator = memo(function AppNavigator({
           return <PermissionPopup onComplete={() => onNavigate("welcome")} />;
       }
     } catch (error) {
-      console.error("Error rendering screen:", error);
+      console.error("Screen error:", error);
       return (
-        <div className="h-screen flex items-center justify-center bg-background">
-          <div className="text-center">
-            <p className="text-foreground mb-4">Error loading screen</p>
-            <button
-              onClick={() => onNavigate("home")}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg"
-            >
-              Go to Home
-            </button>
-          </div>
+        <div className="h-screen flex items-center justify-center">
+          <p>Error loading screen</p>
         </div>
       );
     }
