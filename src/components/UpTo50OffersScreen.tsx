@@ -1,22 +1,91 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, TrendingUp } from 'lucide-react';
 import OfferCard from './atoms/OfferCard';
 import BottomNavigation from './atoms/BottomNavigation';
+import { apiService } from '../services/api';
 
 interface UpTo50OffersScreenProps {
   onNavigate: (screen: string, data?: any) => void;
+  offers?: any[];
 }
 
-const UpTo50OffersScreen: React.FC<UpTo50OffersScreenProps> = ({ onNavigate }) => {
-  const upTo50Offers = [
-    { id: 1, title: "Domino's Pizza", category: 'Food', description: 'Family Combo Deal - 2 Large Pizzas + Sides', originalPrice: 899, discountedPrice: 449, discount: 50, distance: '0.8 km', address: 'Phoenix Mall, Food Court', rating: 4.2, image: 'https://images.unsplash.com/photo-1594398028856-f253a046f417?w=400', validity: 'Valid till 31 Dec 2024', offerType: 'discounted' },
-    { id: 7, title: 'H&M Fashion', category: 'Fashion', description: 'Summer Sale - Up to 60% Off', originalPrice: 3999, discountedPrice: 1599, discount: 60, distance: '2.3 km', address: 'Mantri Square Mall', rating: 4.6, image: 'https://images.unsplash.com/photo-1623332670442-4b6873fb6f03?w=400', validity: 'Valid till 10 Jan 2024', offerType: 'discounted' },
-    { id: 12, title: 'Levi\'s Store', category: 'Fashion', description: 'Denim Days - 50% Off', originalPrice: 3499, discountedPrice: 1749, discount: 50, distance: '1.9 km', address: 'Phoenix Marketcity', rating: 4.4, image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400', validity: 'Valid till 8 Jan 2024', offerType: 'discounted' },
-    { id: 13, title: 'Westside Fashion', category: 'Fashion', description: 'Mega Sale - Up to 70% Off', originalPrice: 2999, discountedPrice: 899, discount: 70, distance: '1.5 km', address: 'Forum Mall', rating: 4.3, image: 'https://images.unsplash.com/photo-1532453288672-3a27e9be9efd?w=400', validity: 'Valid till 5 Jan 2024', offerType: 'discounted' },
-    { id: 19, title: 'Reliance Digital', category: 'Electronics', description: 'Laptop Sale - Up to 50% Off', originalPrice: 59999, discountedPrice: 29999, discount: 50, distance: '1.3 km', address: 'Koramangala', rating: 4.3, image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400', validity: 'Valid till 2 Jan 2024', offerType: 'discounted' },
-    { id: 20, title: 'Max Fashion', category: 'Fashion', description: 'End of Season Sale - Flat 50% Off', originalPrice: 1999, discountedPrice: 999, discount: 50, distance: '2.2 km', address: 'Whitefield', rating: 4.1, image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=400', validity: 'Valid till 18 Jan 2024', offerType: 'discounted' }
-  ];
+const UpTo50OffersScreen: React.FC<UpTo50OffersScreenProps> = ({ onNavigate, offers: propsOffers }) => {
+  const [offers, setOffers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (propsOffers && propsOffers.length > 0) {
+      setOffers(propsOffers);
+      setLoading(false);
+    } else {
+      loadOffers();
+    }
+  }, [propsOffers]);
+
+  const loadOffers = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getOffers({
+        radius: 25,
+        limit: 100
+      });
+
+      const apiOffers = response.offers || [];
+
+      const mappedOffers = apiOffers
+        .filter((offer: any) => offer.calculationType === "PERCENTAGE_RANGE")
+        .map((offer: any) => {
+          let distance = "N/A";
+          const currentLocation = JSON.parse(localStorage.getItem('userLocation') || '{}');
+
+          if (offer.business?.latitude && offer.business?.longitude && currentLocation?.latitude) {
+            const lat1 = parseFloat(currentLocation.latitude);
+            const lon1 = parseFloat(currentLocation.longitude);
+            const lat2 = parseFloat(offer.business.latitude);
+            const lon2 = parseFloat(offer.business.longitude);
+
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c;
+            distance = `${d.toFixed(1)} km`;
+          }
+
+          return {
+            id: offer.id,
+            title: offer.title || offer.business?.business_name || "Offer",
+            category: offer.business?.businessCategory?.[0]?.categoryName || "General",
+            description: offer.description || offer.toc || "",
+            originalPrice: parseFloat(offer.originalPrice || "0"),
+            discountedPrice: parseFloat(offer.discountedPrice || "0"),
+            discount: parseInt(offer.discountPercentage || "0"),
+            distance: distance,
+            address: offer.business?.address || "Location not available",
+            rating: 4.0,
+            image: offer.imagesUrl?.[0] || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400",
+            validity: offer.endDateTime ? `Valid till ${new Date(offer.endDateTime).toLocaleDateString()}` : "Limited time",
+            offerType: 'upto50',
+            apiData: offer
+          };
+        });
+
+      setOffers(mappedOffers);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading up to 50% offers:", error);
+      setOffers([]);
+      setLoading(false);
+    }
+  };
+
+  const upTo50Offers = useMemo(() => {
+    return offers.filter(o => o.offerType === 'upto50');
+  }, [offers]);
 
   const handleGetDirections = (offer: any) => {
     const address = encodeURIComponent(`${offer.address}, Bangalore`);
@@ -44,30 +113,41 @@ const UpTo50OffersScreen: React.FC<UpTo50OffersScreenProps> = ({ onNavigate }) =
           </div>
         </div>
         <p className="text-sm opacity-90 ml-14">
-          {upTo50Offers.length} offers with up to 50% discount or more
+          {loading ? 'Loading...' : `${upTo50Offers.length} offers with up to 50% discount or more`}
         </p>
       </motion.div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 mb-16">
-        <div className="grid grid-cols-2 gap-3">
-          {upTo50Offers.map((offer, index) => (
-            <motion.div
-              key={offer.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <OfferCard
-                offer={offer}
-                onLike={() => {}}
-                onGetDirections={() => handleGetDirections(offer)}
-                onClick={() => onNavigate('offerDetails', { offer })}
-                hideActions={true}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin"></div>
+          </div>
+        ) : upTo50Offers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <TrendingUp className="w-16 h-16 text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No Up to 50% Off Offers</h3>
+            <p className="text-gray-500">Check back later for amazing deals!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {upTo50Offers.map((offer, index) => (
+              <motion.div
+                key={offer.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <OfferCard
+                  offer={offer}
+                  onLike={() => {}}
+                  onGetDirections={() => handleGetDirections(offer)}
+                  onClick={() => onNavigate('offerDetails', { offer: offer.apiData || offer })}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom Navigation */}

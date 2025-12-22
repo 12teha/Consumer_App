@@ -114,7 +114,8 @@ const OfferTypeFilter: React.FC<OfferTypeFilterProps> = ({
     {
       id: "discounted",
       label: "Discounted Offers",
-      icon: Percent,
+      icon: "https://obz-icons.s3.ap-south-1.amazonaws.com/Discount+icons_.jpg",
+      iconType: "image",
       color: "from-pink-500 to-red-500",
       bgColor: "bg-pink-50",
       textColor: "text-pink-600",
@@ -123,7 +124,8 @@ const OfferTypeFilter: React.FC<OfferTypeFilterProps> = ({
     {
       id: "flat",
       label: "Flat Offers",
-      icon: Tag,
+      icon: "https://obz-icons.s3.ap-south-1.amazonaws.com/flat+offer+icons_.jpg",
+      iconType: "image",
       color: "from-blue-500 to-cyan-500",
       bgColor: "bg-blue-50",
       textColor: "text-blue-600",
@@ -132,7 +134,8 @@ const OfferTypeFilter: React.FC<OfferTypeFilterProps> = ({
     {
       id: "exchange",
       label: "Exchange Offers",
-      icon: RefreshCw,
+      icon: "https://obz-icons.s3.ap-south-1.amazonaws.com/Exchange+offer+icons_.jpg",
+      iconType: "image",
       color: "from-green-500 to-teal-500",
       bgColor: "bg-green-50",
       textColor: "text-green-600",
@@ -141,7 +144,8 @@ const OfferTypeFilter: React.FC<OfferTypeFilterProps> = ({
     {
       id: "upto50",
       label: "Up to 50% Off",
-      icon: TrendingUp,
+      icon: "https://obz-icons.s3.ap-south-1.amazonaws.com/above+50%25+icons_.jpg",
+      iconType: "image",
       color: "from-orange-500 to-red-500",
       bgColor: "bg-orange-50",
       textColor: "text-orange-600",
@@ -160,8 +164,8 @@ const OfferTypeFilter: React.FC<OfferTypeFilterProps> = ({
   return (
     <div className="flex justify-between gap-3 w-full px-1 relative z-50">
       {offerTypes.map((item) => {
-        const Icon = item.icon;
         const isActive = selectedType === item.id;
+        const isImage = item.iconType === "image";
 
         return (
           <motion.button
@@ -182,9 +186,18 @@ const OfferTypeFilter: React.FC<OfferTypeFilterProps> = ({
               }
             `}
           >
-            <Icon
-              className={`w-6 h-6 mb-1 ${isActive ? "text-white" : ""}`}
-            />
+            {isImage ? (
+              <img
+                src={item.icon as string}
+                alt={item.label}
+                className="w-10 h-10 mb-1 object-contain"
+              />
+            ) : (
+              (() => {
+                const Icon = item.icon as React.ComponentType<{ className?: string }>;
+                return <Icon className={`w-10 h-10 mb-1 ${isActive ? "text-white" : ""}`} />;
+              })()
+            )}
             <span className="text-[11px] text-center leading-tight font-medium">
               {item.label}
             </span>

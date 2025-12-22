@@ -1344,8 +1344,96 @@ export default function OfferDetailsScreen({
           </div>
         </motion.div>
 
-        {/* Rest of your component remains the same */}
-        {/* ... (other sections like detailed information, expired offer message, etc.) */}
+        {/* Validity Period */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-4 border-b border-gray-100"
+        >
+          {(offer.startDateTime || offer.endDateTime) && (
+            <div className="space-y-2">
+              <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
+                <Clock className="w-5 h-5 text-orange-600" />
+                <span>⏰ Validity Period</span>
+              </h3>
+              {offer.startDateTime && (
+                <p className="text-sm text-gray-600 ml-7">
+                  <span className="font-medium">Starts:</span>{" "}
+                  {formatDate(offer.startDateTime)}
+                </p>
+              )}
+              {offer.endDateTime && (
+                <p className="text-sm text-gray-900 font-medium ml-7">
+                  <span className="font-medium text-orange-600">Expires:</span>{" "}
+                  {formatDate(offer.endDateTime)}
+                </p>
+              )}
+              {timeRemaining && !isExpired && (
+                <p className="text-sm text-green-600 font-semibold ml-7">
+                  ⏱️ {timeRemaining} remaining
+                </p>
+              )}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Terms and Conditions */}
+        {offer.toc && offer.toc !== "No" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-4 border-b border-gray-100"
+          >
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-medium text-gray-900 text-sm mb-2 flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                <span>⚠️ Terms & Conditions</span>
+              </h4>
+              <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
+                {offer.toc}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Calculation Type Info */}
+        {offer.calculationType && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-4 border-b border-gray-100"
+          >
+            <h3 className="font-semibold text-gray-900 mb-2">Offer Type</h3>
+            <div className="inline-block px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg">
+              <p className="text-sm font-medium text-purple-800">
+                {offer.calculationType === "ORIGINAL_SELLING_PERCENTAGE" && "🔖 Discounted Offer"}
+                {offer.calculationType === "FLAT_PERCENTAGE" && "💰 Flat Discount"}
+                {offer.calculationType === "EXCHANGE_DISCOUNT" && "🔄 Exchange Offer"}
+                {offer.calculationType === "PERCENTAGE_RANGE" && "📊 Up to 50% Off"}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* About This Offer */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-4 border-b border-gray-100"
+        >
+          <h3 className="font-semibold text-gray-900 mb-3">About This Offer</h3>
+          {offer.description ? (
+            <p className="text-gray-600 text-sm leading-relaxed mb-3">
+              {offer.description}
+            </p>
+          ) : (
+            <p className="text-gray-600 text-sm leading-relaxed mb-3">
+              Enjoy our specially crafted{" "}
+              {businessCategory?.toLowerCase() || "exclusive"} offer with premium
+              quality and exceptional service.
+            </p>
+          )}
+        </motion.div>
       </div>
 
       {/* Share Success Popup */}

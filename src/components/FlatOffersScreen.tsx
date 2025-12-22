@@ -1,22 +1,91 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Tag } from 'lucide-react';
 import OfferCard from './atoms/OfferCard';
 import BottomNavigation from './atoms/BottomNavigation';
+import { apiService } from '../services/api';
 
 interface FlatOffersScreenProps {
   onNavigate: (screen: string, data?: any) => void;
+  offers?: any[];
 }
 
-const FlatOffersScreen: React.FC<FlatOffersScreenProps> = ({ onNavigate }) => {
-  const flatOffers = [
-    { id: 2, title: 'Zara Fashion Store', category: 'Fashion', description: 'Winter Collection - Jackets & Coats', originalPrice: 2999, discountedPrice: 1799, discount: 40, distance: '1.2 km', address: 'City Center Mall', rating: 4.5, image: 'https://images.unsplash.com/photo-1575111507952-2d4f371374f5?w=400', validity: 'Valid till 15 Jan 2024', offerType: 'flat' },
-    { id: 5, title: 'Nike Sports Store', category: 'Fitness', description: 'Athletic Wear & Shoes', originalPrice: 4999, discountedPrice: 3999, discount: 20, distance: '1.8 km', address: 'Forum Mall', rating: 4.1, image: 'https://images.unsplash.com/photo-1571019613914-85f342c6a11e?w=400', validity: 'Valid till 25 Dec 2024', offerType: 'flat' },
-    { id: 9, title: 'Burger King', category: 'Food', description: 'Whopper Meal Combo', originalPrice: 299, discountedPrice: 199, discount: 33, distance: '1.1 km', address: 'Brigade Road', rating: 4.0, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400', validity: 'Valid till 31 Dec 2024', offerType: 'flat' },
-    { id: 10, title: 'Lifestyle Fashion', category: 'Fashion', description: 'Flat ₹1000 Off on Purchase', originalPrice: 4999, discountedPrice: 3999, discount: 20, distance: '1.5 km', address: 'Garuda Mall', rating: 4.2, image: 'https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=400', validity: 'Valid till 15 Jan 2024', offerType: 'flat' },
-    { id: 15, title: 'KFC', category: 'Food', description: 'Flat ₹100 Off on Orders Above ₹400', originalPrice: 499, discountedPrice: 399, discount: 20, distance: '0.9 km', address: 'MG Road', rating: 4.1, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=400', validity: 'Valid till 28 Dec 2024', offerType: 'flat' },
-    { id: 16, title: 'Adidas Store', category: 'Fitness', description: 'Flat ₹500 Off on Sports Shoes', originalPrice: 3999, discountedPrice: 3499, discount: 13, distance: '2.0 km', address: 'Phoenix Marketcity', rating: 4.4, image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', validity: 'Valid till 10 Jan 2024', offerType: 'flat' }
-  ];
+const FlatOffersScreen: React.FC<FlatOffersScreenProps> = ({ onNavigate, offers: propsOffers }) => {
+  const [offers, setOffers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (propsOffers && propsOffers.length > 0) {
+      setOffers(propsOffers);
+      setLoading(false);
+    } else {
+      loadOffers();
+    }
+  }, [propsOffers]);
+
+  const loadOffers = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getOffers({
+        radius: 25,
+        limit: 100
+      });
+
+      const apiOffers = response.offers || [];
+
+      const mappedOffers = apiOffers
+        .filter((offer: any) => offer.calculationType === "FLAT_PERCENTAGE")
+        .map((offer: any) => {
+          let distance = "N/A";
+          const currentLocation = JSON.parse(localStorage.getItem('userLocation') || '{}');
+
+          if (offer.business?.latitude && offer.business?.longitude && currentLocation?.latitude) {
+            const lat1 = parseFloat(currentLocation.latitude);
+            const lon1 = parseFloat(currentLocation.longitude);
+            const lat2 = parseFloat(offer.business.latitude);
+            const lon2 = parseFloat(offer.business.longitude);
+
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const d = R * c;
+            distance = `${d.toFixed(1)} km`;
+          }
+
+          return {
+            id: offer.id,
+            title: offer.title || offer.business?.business_name || "Offer",
+            category: offer.business?.businessCategory?.[0]?.categoryName || "General",
+            description: offer.description || offer.toc || "",
+            originalPrice: parseFloat(offer.originalPrice || "0"),
+            discountedPrice: parseFloat(offer.discountedPrice || "0"),
+            discount: parseInt(offer.discountPercentage || "0"),
+            distance: distance,
+            address: offer.business?.address || "Location not available",
+            rating: 4.0,
+            image: offer.imagesUrl?.[0] || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400",
+            validity: offer.endDateTime ? `Valid till ${new Date(offer.endDateTime).toLocaleDateString()}` : "Limited time",
+            offerType: 'flat',
+            apiData: offer
+          };
+        });
+
+      setOffers(mappedOffers);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error loading flat offers:", error);
+      setOffers([]);
+      setLoading(false);
+    }
+  };
+
+  const flatOffers = useMemo(() => {
+    return offers.filter(o => o.offerType === 'flat');
+  }, [offers]);
 
   const handleGetDirections = (offer: any) => {
     const address = encodeURIComponent(`${offer.address}, Bangalore`);
@@ -44,30 +113,42 @@ const FlatOffersScreen: React.FC<FlatOffersScreenProps> = ({ onNavigate }) => {
           </div>
         </div>
         <p className="text-sm opacity-90 ml-14">
-          {flatOffers.length} flat discount offers available
+          {loading ? 'Loading...' : `${flatOffers.length} flat discount offers available`}
         </p>
       </motion.div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 mb-16">
-        <div className="grid grid-cols-2 gap-3">
-          {flatOffers.map((offer, index) => (
-            <motion.div
-              key={offer.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <OfferCard
-                offer={offer}
-                onLike={() => {}}
-                onGetDirections={() => handleGetDirections(offer)}
-                onClick={() => onNavigate('offerDetails', { offer })}
-                hideActions={true}
-              />
-            </motion.div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        ) : flatOffers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center px-4">
+            <Tag className="w-16 h-16 text-gray-300 mb-4" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No Flat Offers</h3>
+            <p className="text-gray-500">Check back later for amazing deals!</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {flatOffers.map((offer, index) => (
+              <motion.div
+                key={offer.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <OfferCard
+                  offer={offer}
+                  onLike={() => {}}
+                  onGetDirections={() => handleGetDirections(offer)}
+                  onClick={() => onNavigate('offerDetails', { offer: offer.apiData || offer })}
+                  hideActions={true}
+                />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Bottom Navigation */}
