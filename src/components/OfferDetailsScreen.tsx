@@ -686,7 +686,7 @@ import DirectionsMap from "./DirectionsMap";
 interface OfferDetailsScreenProps {
   offer: any;
   onBack: () => void;
-  onOfferExpired?: () => void; // New callback for expired offers
+  onOfferExpired?: () => void;
 }
 
 export default function OfferDetailsScreen({
@@ -703,65 +703,56 @@ export default function OfferDetailsScreen({
   );
   const [isExpired, setIsExpired] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState<string | null>(null);
+  const [showLocationError, setShowLocationError] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
 
-  // Extract business data from nested structure
-  const business = offer.business || {};
-  const businessName = business.business_name || offer.businessName;
-  const businessAddress = business.address || offer.address;
-  const businessLatitude = business.latitude || offer.latitude;
-  const businessLongitude = business.longitude || offer.longitude;
+  // Safe extraction of business data with null checks
+  const business = offer?.business || {};
+  const businessName = business?.business_name || offer?.businessName || "Unknown Business";
+  const businessAddress = business?.address || offer?.address || "Address not available";
+  const businessLatitude = business?.latitude || offer?.latitude;
+  const businessLongitude = business?.longitude || offer?.longitude;
+  const businessPhone = business?.phone || offer?.businessPhone || offer?.phone;
 
   // Extract category name from array (businessCategory is an array with categoryName)
   const businessCategory = React.useMemo(() => {
-    // Check if businessCategory is an array with categoryName
-    if (business.businessCategory && Array.isArray(business.businessCategory) && business.businessCategory.length > 0) {
+    if (!offer) return 'Uncategorized';
+    
+    if (business?.businessCategory && Array.isArray(business.businessCategory) && business.businessCategory.length > 0) {
       return business.businessCategory[0].categoryName || 'Uncategorized';
     }
-    // Fallback to single object
-    if (business.businessCategory?.categoryName) {
+    if (business?.businessCategory?.categoryName) {
       return business.businessCategory.categoryName;
     }
-    // Fallback to offer.category
-    return offer.category || 'Uncategorized';
-  }, [business.businessCategory, offer.category]);
+    return offer?.category || 'Uncategorized';
+  }, [offer, business?.businessCategory]);
 
   // Use all uploaded images from the offer
-  // API returns 'imagesUrl' array (new format) or 'photos'/'image' (old format)
   const offerImages = React.useMemo(() => {
-    if (
-      offer.imagesUrl &&
-      Array.isArray(offer.imagesUrl) &&
-      offer.imagesUrl.length > 0
-    ) {
-      // Use the imagesUrl array if available (latest API format)
+    if (!offer) return [];
+
+    if (offer.imagesUrl && Array.isArray(offer.imagesUrl) && offer.imagesUrl.length > 0) {
       return offer.imagesUrl;
-    } else if (
-      offer.photos &&
-      Array.isArray(offer.photos) &&
-      offer.photos.length > 0
-    ) {
-      // Use the photos array if available (older format)
+    } else if (offer.photos && Array.isArray(offer.photos) && offer.photos.length > 0) {
       return offer.photos;
     } else if (offer.image) {
-      // Fallback to single image if no array available
       return [offer.image];
     } else {
-      // Fallback to empty array if no images at all
       return [];
     }
-  }, [offer.imagesUrl, offer.photos, offer.image]);
+  }, [offer]);
 
   // Check if offer is expired and calculate time remaining
   useEffect(() => {
+    if (!offer) return;
+
     const checkOfferValidity = () => {
       const now = new Date();
       
-      // Check if offer has end date/time
       if (offer.endDateTime) {
         const endDate = new Date(offer.endDateTime);
         
         if (now > endDate) {
-          // Offer is expired
           setIsExpired(true);
           setTimeRemaining("Expired");
           if (onOfferExpired) {
@@ -769,7 +760,6 @@ export default function OfferDetailsScreen({
           }
           return;
         } else {
-          // Calculate time remaining
           const timeDiff = endDate.getTime() - now.getTime();
           const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
           const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -786,7 +776,6 @@ export default function OfferDetailsScreen({
           setIsExpired(false);
         }
       } else if (offer.startDateTime) {
-        // Check if offer hasn't started yet
         const startDate = new Date(offer.startDateTime);
         if (now < startDate) {
           const timeDiff = startDate.getTime() - now.getTime();
@@ -799,41 +788,22 @@ export default function OfferDetailsScreen({
             setTimeRemaining(`Starts in ${hours}h`);
           }
         } else {
-          // Offer has started but no end date - consider it active
           setTimeRemaining("Active");
         }
       } else {
-        // No date information - consider it active
         setTimeRemaining("Active");
       }
     };
 
-    // Check immediately
     checkOfferValidity();
-
-    // Set up interval to check every minute
     const interval = setInterval(checkOfferValidity, 60000);
-
     return () => clearInterval(interval);
-  }, [offer.endDateTime, offer.startDateTime, onOfferExpired]);
-
-  // Debug: Log offer data to see what fields are available
-  React.useEffect(() => {
-    console.log("📊 Offer Data:", offer);
-    console.log("📊 Business Data:", business);
-    console.log(
-      "📍 Location:",
-      businessAddress,
-      businessLatitude,
-      businessLongitude
-    );
-    console.log("🖼️ Offer Images Array:", offerImages);
-    console.log("🖼️ Number of images:", offerImages.length);
-    console.log("⏰ Offer Expiry Status:", isExpired);
-  }, [offer, offerImages, isExpired]);
+  }, [offer, onOfferExpired]);
 
   // Calculate distance from user's current location to business
   React.useEffect(() => {
+    if (!offer) return;
+
     if (businessLatitude && businessLongitude && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -842,8 +812,7 @@ export default function OfferDetailsScreen({
           const businessLat = parseFloat(businessLatitude);
           const businessLon = parseFloat(businessLongitude);
 
-          // Calculate distance using Haversine formula
-          const R = 6371; // Earth's radius in km
+          const R = 6371;
           const dLat = (businessLat - userLat) * (Math.PI / 180);
           const dLon = (businessLon - userLon) * (Math.PI / 180);
           const a =
@@ -855,7 +824,6 @@ export default function OfferDetailsScreen({
           const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
           const distance = R * c;
 
-          // Format distance
           if (distance < 1) {
             setCalculatedDistance(`${Math.round(distance * 1000)} m`);
           } else {
@@ -864,29 +832,124 @@ export default function OfferDetailsScreen({
         },
         (error) => {
           console.log("Could not get user location:", error);
-          // Fallback to offer.distance if available
           setCalculatedDistance(offer.distance || null);
         }
       );
     } else {
-      // Use offer.distance from API if geolocation not available
       setCalculatedDistance(offer.distance || null);
     }
-  }, [businessLatitude, businessLongitude, offer.distance]);
+  }, [businessLatitude, businessLongitude, offer]);
 
   const handleGetDirections = () => {
+    if (isExpired || !offer) {
+      return;
+    }
+
     // Check if we have coordinates
     if (businessLatitude && businessLongitude) {
-      setShowDirections(true);
+      // Try to get current location to check permission
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Permission granted, show directions
+            setShowDirections(true);
+          },
+          (error) => {
+            // Permission denied or other error
+            console.log("Location permission denied:", error);
+            setShowLocationError(true);
+          },
+          {
+            timeout: 5000,
+            maximumAge: 30000,
+            enableHighAccuracy: false
+          }
+        );
+      } else {
+        // Geolocation not supported
+        setShowLocationError(true);
+      }
     } else {
       // Fallback to Google Maps with address
       const query = encodeURIComponent(
-        businessAddress || businessName || offer.title
+        businessAddress || businessName || offer?.title || "Business Location"
       );
       window.open(
         `https://www.google.com/maps/search/?api=1&query=${query}`,
         "_blank"
       );
+    }
+  };
+
+  const handleCloseLocationError = () => {
+    setShowLocationError(false);
+  };
+
+  // Format phone number for display
+  const formatPhoneNumber = (phone: string) => {
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length === 10) {
+      return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+    } else if (cleaned.length === 12) {
+      return `+${cleaned.slice(0, 2)} ${cleaned.slice(2, 7)} ${cleaned.slice(7)}`;
+    } else if (cleaned.length === 13) {
+      return `+${cleaned.slice(0, 2)} ${cleaned.slice(2, 7)} ${cleaned.slice(7)}`;
+    }
+    return phone;
+  };
+
+  // Share functionality
+  const handleShare = async () => {
+    const offerTitle = offer?.title || businessName || "Amazing Offer";
+    const offerDescription = offer?.description || "Check out this great offer!";
+    const discountText = offer?.discountPercentage ? `${offer.discountPercentage}% OFF - ` : "";
+    
+    // Create share text
+    const shareText = `${discountText}${offerTitle}\n\n${offerDescription}\n\n`;
+    
+    // Create deep link for existing users (assuming you have offer IDs)
+    const offerId = offer?.id || offer?._id;
+    const deepLink = offerId ? `offerbeez://offers/${offerId}` : null;
+    
+    // Web link for non-existing users
+    const webLink = "https://user.offerlabs.in/";
+    
+    const finalText = `${shareText}${deepLink ? `For existing users: ${deepLink}\n\n` : ''}For new users: ${webLink}`;
+
+    try {
+      if (navigator.share) {
+        // Use Web Share API if available
+        await navigator.share({
+          title: offerTitle,
+          text: shareText,
+          url: webLink,
+        });
+      } else if (navigator.clipboard) {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(finalText);
+        setShowSharePopup(true);
+        setTimeout(() => setShowSharePopup(false), 3000);
+      } else {
+        // Final fallback
+        const textArea = document.createElement('textarea');
+        textArea.value = finalText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setShowSharePopup(true);
+        setTimeout(() => setShowSharePopup(false), 3000);
+      }
+    } catch (error) {
+      console.log('Error sharing:', error);
+      // Fallback to clipboard if Web Share fails
+      try {
+        await navigator.clipboard.writeText(finalText);
+        setShowSharePopup(true);
+        setTimeout(() => setShowSharePopup(false), 3000);
+      } catch (clipboardError) {
+        console.log('Clipboard also failed:', clipboardError);
+      }
     }
   };
 
@@ -906,6 +969,52 @@ export default function OfferDetailsScreen({
     }
   };
 
+  // If offer is null, show error message
+  if (!offer) {
+    return (
+      <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white px-4 py-3 shadow-sm flex items-center justify-between"
+        >
+          <button
+            onClick={onBack}
+            className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Go back"
+            aria-label="Go back to previous screen"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <h1 className="text-lg font-semibold text-gray-900">Offer Details</h1>
+          <div className="w-6"></div>
+        </motion.div>
+
+        <div className="flex-1 flex items-center justify-center p-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center"
+          >
+            <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Offer Not Found
+            </h2>
+            <p className="text-gray-600 mb-6">
+              The offer you're looking for is not available or has been removed.
+            </p>
+            <Button
+              onClick={onBack}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Go Back
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* Header */}
@@ -917,24 +1026,22 @@ export default function OfferDetailsScreen({
         <button
           onClick={onBack}
           className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+          title="Go back"
+          aria-label="Go back to previous screen"
         >
           <ArrowLeft className="w-6 h-6 text-gray-600" />
         </button>
         <h1 className="text-lg font-semibold text-gray-900">Offer Details</h1>
         <div className="flex items-center space-x-3">
-          {/* <button
-            onClick={() => setIsWishlisted(!isWishlisted)}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          {/* Share Button */}
+          <button
+            onClick={handleShare}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            title="Share offer"
+            aria-label="Share this offer"
           >
-            <Heart
-              className={`w-6 h-6 ${
-                isWishlisted ? "text-red-500 fill-current" : "text-gray-400"
-              }`}
-            />
-          </button> */}
-          {/* <button className="p-1 hover:bg-gray-100 rounded-full transition-colors">
-            <Share2 className="w-6 h-6 text-gray-400" />
-          </button> */}
+            <Share2 className="w-5 h-5 text-gray-600" />
+          </button>
         </div>
       </motion.div>
 
@@ -998,6 +1105,8 @@ export default function OfferDetailsScreen({
                   );
                 }}
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
+                title="Previous image"
+                aria-label="View previous image"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -1009,6 +1118,8 @@ export default function OfferDetailsScreen({
                   );
                 }}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors z-10"
+                title="Next image"
+                aria-label="View next image"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
@@ -1018,19 +1129,24 @@ export default function OfferDetailsScreen({
           {/* Image Indicators */}
           {offerImages.length > 1 && (
             <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {offerImages.map((_, index) => (
+              {offerImages.map((_: any, index: number) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentImageIndex(index)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(index);
+                  }}
                   className={`w-2 h-2 rounded-full transition-all ${
                     currentImageIndex === index ? "bg-white w-6" : "bg-white/50"
                   }`}
+                  title={`Go to image ${index + 1}`}
+                  aria-label={`View image ${index + 1} of ${offerImages.length}`}
                 />
               ))}
             </div>
           )}
 
-          {/* Discount Badge - Use discountPercentage from API */}
+          {/* Discount Badge */}
           {offer.discountPercentage && !isExpired && (
             <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full font-bold shadow-lg">
               {offer.discountPercentage}% OFF
@@ -1063,7 +1179,7 @@ export default function OfferDetailsScreen({
               )}
               <p className="text-gray-600 mt-2">{offer.description}</p>
 
-              {/* Business Information - Always visible */}
+              {/* Business Information */}
               {businessName && (
                 <div className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                   <p className="text-sm font-semibold text-gray-900 mb-1">
@@ -1073,6 +1189,29 @@ export default function OfferDetailsScreen({
                     <p className="text-xs text-blue-600 mb-1">
                       📂 {businessCategory}
                     </p>
+                  )}
+                  
+                  {/* Business Phone Number - Always Visible */}
+                  {businessPhone && (
+                    <div className="flex items-center space-x-2 mt-2 p-2 bg-white rounded border border-blue-200">
+                      <Phone className="w-4 h-4 text-green-600" />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-gray-900">Contact Number</p>
+                        <p className="text-sm font-mono text-green-700">
+                          {formatPhoneNumber(businessPhone)}
+                        </p>
+                      </div>
+                      {!isExpired && (
+                        <button
+                          onClick={() => window.open(`tel:${businessPhone}`)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                          title="Call business"
+                          aria-label={`Call ${businessName} at ${formatPhoneNumber(businessPhone)}`}
+                        >
+                          Call
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -1087,7 +1226,7 @@ export default function OfferDetailsScreen({
             )}
           </div>
 
-          {/* Price Information - Only show if not expired */}
+          {/* Price Information */}
           {!isExpired && (offer.discountedPrice || offer.originalPrice) && (
             <div className="flex items-center justify-between mb-4 p-3 bg-green-50 rounded-lg">
               <div className="flex items-center space-x-3">
@@ -1139,48 +1278,8 @@ export default function OfferDetailsScreen({
             </div>
           )}
 
-          {/* Offer Details Grid - Always show available information */}
+          {/* Offer Details Grid */}
           <div className="space-y-3 mb-4">
-            {/* Validity - Show offer dates with time remaining */}
-            {(offer.startDateTime || offer.endDateTime) && (
-              <div className="flex items-start space-x-2 text-sm">
-                <Clock className={`w-4 h-4 mt-0.5 ${
-                  isExpired ? "text-red-600" : 
-                  timeRemaining?.includes("Starts") ? "text-blue-600" : "text-orange-600"
-                }`} />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">
-                    {isExpired ? "⏰ Expired Offer" : "⏰ Validity Period"}
-                  </p>
-                  
-                  {offer.startDateTime && (
-                    <p className="text-gray-600 text-xs mt-1">
-                      Starts: {formatDate(offer.startDateTime)}
-                    </p>
-                  )}
-                  
-                  {offer.endDateTime && (
-                    <p className={`text-xs mt-1 font-medium ${
-                      isExpired ? "text-red-600" : "text-orange-600"
-                    }`}>
-                      {isExpired ? "Expired: " : "Expires: "}
-                      {formatDate(offer.endDateTime)}
-                    </p>
-                  )}
-                  
-                  {/* Time Remaining Indicator */}
-                  {timeRemaining && !isExpired && (
-                    <p className={`text-xs mt-1 font-semibold ${
-                      timeRemaining.includes("Starts") ? "text-blue-600" : "text-green-600"
-                    }`}>
-                      {timeRemaining.includes("Starts") ? "⏳ " : "⏰ "}
-                      {timeRemaining}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
             {/* Location - Always visible */}
             <div className="flex items-start space-x-2 text-sm">
               <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
@@ -1197,103 +1296,24 @@ export default function OfferDetailsScreen({
               </div>
             </div>
 
-            {offer.offerCode && !isExpired && (
+            {/* Phone Number - Additional visible section */}
+            {businessPhone && (
               <div className="flex items-start space-x-2 text-sm">
-                <span className="text-gray-400 mt-0.5">🎫</span>
+                <Phone className="w-4 h-4 text-green-600 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-medium text-gray-700">Offer Code</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <code className="px-3 py-1 bg-gray-100 border border-dashed border-gray-300 rounded text-purple-600 font-mono">
-                      {offer.offerCode}
-                    </code>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(offer.offerCode);
-                        alert("Code copied!");
-                      }}
-                      className="text-xs text-blue-600 hover:underline"
-                    >
-                      Copy
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Expired Offer Code */}
-            {offer.offerCode && isExpired && (
-              <div className="flex items-start space-x-2 text-sm">
-                <span className="text-gray-400 mt-0.5">🎫</span>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-500">Offer Code (Expired)</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <code className="px-3 py-1 bg-gray-100 border border-dashed border-gray-300 rounded text-gray-400 font-mono line-through">
-                      {offer.offerCode}
-                    </code>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Contact - Show if phone or email available */}
-            {(offer.businessPhone || offer.businessEmail) && (
-              <div className="flex items-start space-x-2 text-sm">
-                <Phone className="w-4 h-4 text-gray-400 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-700">Contact</p>
-                  {offer.businessPhone && (
-                    <a
-                      href={`tel:${offer.businessPhone}`}
-                      className="text-blue-600 hover:underline block"
-                    >
-                      📞 {offer.businessPhone}
-                    </a>
-                  )}
-                  {offer.businessEmail && (
-                    <a
-                      href={`mailto:${offer.businessEmail}`}
-                      className="text-blue-600 hover:underline block mt-1"
-                    >
-                      📧 {offer.businessEmail}
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {offer.openingHours && (
-              <div className="flex items-start space-x-2 text-sm">
-                <Clock className="w-4 h-4 text-gray-400 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-700">Opening Hours</p>
-                  <p className="text-gray-600">{offer.openingHours}</p>
-                </div>
-              </div>
-            )}
-
-            {offer.website && (
-              <div className="flex items-start space-x-2 text-sm">
-                <Globe className="w-4 h-4 text-gray-400 mt-0.5" />
-                <div className="flex-1">
-                  <p className="font-medium text-gray-700">Website</p>
-                  <a
-                    href={
-                      offer.website.startsWith("http")
-                        ? offer.website
-                        : `https://${offer.website}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Visit Website
-                  </a>
+                  <p className="font-medium text-gray-900">📞 Contact Number</p>
+                  <p className="text-gray-900 text-sm mt-1 font-mono">
+                    {formatPhoneNumber(businessPhone)}
+                  </p>
+                  <p className="text-green-600 text-xs mt-1 font-semibold">
+                    Available for calls and inquiries
+                  </p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Action Buttons - Disabled for expired offers */}
+          {/* Action Buttons */}
           <div className="flex space-x-3">
             <Button
               onClick={handleGetDirections}
@@ -1307,9 +1327,9 @@ export default function OfferDetailsScreen({
               <Navigation className="w-4 h-4" />
               <span>{isExpired ? "Expired Offer" : "Get Directions"}</span>
             </Button>
-            {offer.businessPhone && (
+            {businessPhone && (
               <Button
-                onClick={() => window.open(`tel:${offer.businessPhone}`)}
+                onClick={() => window.open(`tel:${businessPhone}`)}
                 disabled={isExpired}
                 className={`flex-1 flex items-center justify-center space-x-2 ${
                   isExpired 
@@ -1324,116 +1344,112 @@ export default function OfferDetailsScreen({
           </div>
         </motion.div>
 
-        {/* Detailed Information */}
-        {!isExpired && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-4 border-b border-gray-100"
-          >
-            <h3 className="font-semibold text-gray-900 mb-3">About This Offer</h3>
-
-            {offer.longDescription ? (
-              <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                {offer.longDescription}
-              </p>
-            ) : offer.description ? (
-              <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                {offer.description}
-              </p>
-            ) : (
-              <p className="text-gray-600 text-sm leading-relaxed mb-3">
-                Enjoy our specially crafted{" "}
-                {offer.category?.toLowerCase() || "exclusive"} offer with premium
-                quality and exceptional service.
-              </p>
-            )}
-
-            {/* Terms and Conditions - Use 'toc' field from API */}
-            {offer.toc && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <h4 className="font-medium text-gray-900 text-sm mb-2">
-                  ⚠️ Terms & Conditions
-                </h4>
-                <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
-                  {offer.toc}
-                </p>
-              </div>
-            )}
-
-            {/* Additional Details */}
-            {(offer.maxUsagePerUser ||
-              offer.minPurchaseAmount ||
-              offer.maxDiscountAmount) && (
-              <div className="mt-4 space-y-2">
-                <h4 className="font-medium text-gray-900 text-sm">
-                  Offer Limits
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  {offer.maxUsagePerUser && (
-                    <div className="p-2 bg-gray-50 rounded">
-                      <p className="text-gray-500">Usage Limit</p>
-                      <p className="font-medium text-gray-900">
-                        {offer.maxUsagePerUser} times per user
-                      </p>
-                    </div>
-                  )}
-                  {offer.minPurchaseAmount && (
-                    <div className="p-2 bg-gray-50 rounded">
-                      <p className="text-gray-500">Min. Purchase</p>
-                      <p className="font-medium text-gray-900">
-                        ₹{offer.minPurchaseAmount}
-                      </p>
-                    </div>
-                  )}
-                  {offer.maxDiscountAmount && (
-                    <div className="p-2 bg-gray-50 rounded">
-                      <p className="text-gray-500">Max. Discount</p>
-                      <p className="font-medium text-gray-900">
-                        ₹{offer.maxDiscountAmount}
-                      </p>
-                    </div>
-                  )}
-                  {offer.totalRedemptions !== undefined && (
-                    <div className="p-2 bg-gray-50 rounded">
-                      <p className="text-gray-500">Total Redeemed</p>
-                      <p className="font-medium text-gray-900">
-                        {offer.totalRedemptions} times
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-
-        {/* Expired Offer Message */}
-        {isExpired && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-4 border-b border-gray-100"
-          >
-            <div className="text-center py-6">
-              <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                This Offer Has Expired
+        {/* Validity Period */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-4 border-b border-gray-100"
+        >
+          {(offer.startDateTime || offer.endDateTime) && (
+            <div className="space-y-2">
+              <h3 className="font-semibold text-gray-900 flex items-center space-x-2">
+                <Clock className="w-5 h-5 text-orange-600" />
+                <span>⏰ Validity Period</span>
               </h3>
-              <p className="text-gray-600 text-sm mb-4">
-                This offer is no longer available as it has passed its validity period. 
-                Please check back for new offers!
+              {offer.startDateTime && (
+                <p className="text-sm text-gray-600 ml-7">
+                  <span className="font-medium">Starts:</span>{" "}
+                  {formatDate(offer.startDateTime)}
+                </p>
+              )}
+              {offer.endDateTime && (
+                <p className="text-sm text-gray-900 font-medium ml-7">
+                  <span className="font-medium text-orange-600">Expires:</span>{" "}
+                  {formatDate(offer.endDateTime)}
+                </p>
+              )}
+              {timeRemaining && !isExpired && (
+                <p className="text-sm text-green-600 font-semibold ml-7">
+                  ⏱️ {timeRemaining} remaining
+                </p>
+              )}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Terms and Conditions */}
+        {offer.toc && offer.toc !== "No" && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-4 border-b border-gray-100"
+          >
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-medium text-gray-900 text-sm mb-2 flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                <span>⚠️ Terms & Conditions</span>
+              </h4>
+              <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-line">
+                {offer.toc}
               </p>
-              <Button
-                onClick={onBack}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                Browse Other Offers
-              </Button>
             </div>
           </motion.div>
         )}
+
+        {/* Calculation Type Info */}
+        {offer.calculationType && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-4 border-b border-gray-100"
+          >
+            <h3 className="font-semibold text-gray-900 mb-2">Offer Type</h3>
+            <div className="inline-block px-3 py-2 bg-purple-50 border border-purple-200 rounded-lg">
+              <p className="text-sm font-medium text-purple-800">
+                {offer.calculationType === "ORIGINAL_SELLING_PERCENTAGE" && "🔖 Discounted Offer"}
+                {offer.calculationType === "FLAT_PERCENTAGE" && "💰 Flat Discount"}
+                {offer.calculationType === "EXCHANGE_DISCOUNT" && "🔄 Exchange Offer"}
+                {offer.calculationType === "PERCENTAGE_RANGE" && "📊 Up to 50% Off"}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        {/* About This Offer */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white p-4 border-b border-gray-100"
+        >
+          <h3 className="font-semibold text-gray-900 mb-3">About This Offer</h3>
+          {offer.description ? (
+            <p className="text-gray-600 text-sm leading-relaxed mb-3">
+              {offer.description}
+            </p>
+          ) : (
+            <p className="text-gray-600 text-sm leading-relaxed mb-3">
+              Enjoy our specially crafted{" "}
+              {businessCategory?.toLowerCase() || "exclusive"} offer with premium
+              quality and exceptional service.
+            </p>
+          )}
+        </motion.div>
       </div>
+
+      {/* Share Success Popup */}
+      {showSharePopup && (
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-full shadow-lg z-50"
+        >
+          <div className="flex items-center space-x-2">
+            <Share2 className="w-4 h-4" />
+            <span className="font-semibold">Offer link copied to clipboard!</span>
+          </div>
+        </motion.div>
+      )}
 
       {/* Directions Map Modal */}
       {showDirections && businessLatitude && businessLongitude && (
@@ -1449,6 +1465,44 @@ export default function OfferDetailsScreen({
         />
       )}
 
+      {/* Location Permission Error Popup */}
+      {showLocationError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          onClick={handleCloseLocationError}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-sm w-full mx-auto shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-8 h-8 text-yellow-600" />
+              </div>
+              
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Location Access Required
+              </h3>
+              
+              <p className="text-gray-600 text-sm mb-6">
+                Your device location permission is not allowed. Please give access to get directions.
+              </p>
+              
+              <Button
+                onClick={handleCloseLocationError}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
+              >
+                OK
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Full Screen Image Modal */}
       {showImageModal && (
         <motion.div
@@ -1461,11 +1515,12 @@ export default function OfferDetailsScreen({
           <button
             onClick={() => setShowImageModal(false)}
             className="absolute top-4 right-4 z-10 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-sm transition-colors"
+            title="Close image viewer"
+            aria-label="Close full screen image view"
           >
             ✕
           </button>
 
-          {/* Image with swipe navigation */}
           <div className="relative w-full h-full flex items-center justify-center p-4">
             <ImageWithFallback
               src={offerImages[currentImageIndex]}
@@ -1474,7 +1529,6 @@ export default function OfferDetailsScreen({
               onClick={(e) => e.stopPropagation()}
             />
 
-            {/* Navigation Arrows in Modal */}
             {offerImages.length > 1 && (
               <>
                 <button
@@ -1485,6 +1539,8 @@ export default function OfferDetailsScreen({
                     );
                   }}
                   className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-4 rounded-full backdrop-blur-sm transition-colors"
+                  title="Previous image"
+                  aria-label="View previous image"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
@@ -1496,13 +1552,14 @@ export default function OfferDetailsScreen({
                     );
                   }}
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white p-4 rounded-full backdrop-blur-sm transition-colors"
+                  title="Next image"
+                  aria-label="View next image"
                 >
                   <ChevronRight className="w-6 h-6" />
                 </button>
               </>
             )}
 
-            {/* Image counter */}
             {offerImages.length > 1 && (
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full backdrop-blur-sm">
                 {currentImageIndex + 1} / {offerImages.length}

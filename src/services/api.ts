@@ -61,6 +61,12 @@ class ApiService {
 
       console.log('API response status:', response.status, response.statusText);
 
+      // Handle 304 Not Modified - return null to indicate cached data should be used
+      if (response.status === 304) {
+        console.log('304 Not Modified - using cached data');
+        return null;
+      }
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API error response:', errorText);
@@ -99,7 +105,7 @@ class ApiService {
   clearOffersCache() {
     // Clear only offers cache when location changes
     for (const [key] of this.cache) {
-      if (key.includes('/user/offer')) {
+      if (key.includes('/user/offers')) {
         this.cache.delete(key);
       }
     }
@@ -187,7 +193,7 @@ class ApiService {
     if (params?.category && params.category !== 'All') queryParams.append('category', params.category);
 
     const queryString = queryParams.toString();
-    const endpoint = `/user/offer${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/user/offers${queryString ? `?${queryString}` : ''}`;
 
     console.log('🔍 getOffers called with params:', params);
     console.log('🔍 Full endpoint:', endpoint);
@@ -203,6 +209,19 @@ class ApiService {
 
     try {
       const data = await this.makeRequest(endpoint);
+
+      // Handle 304 Not Modified - return cached data if available
+      if (data === null) {
+        if (cached) {
+          console.log('✅ Using cached offers after 304 response');
+          return cached;
+        } else {
+          // If no cache available, treat as empty response
+          console.log('⚠️ 304 but no cache available, returning empty offers');
+          return { offers: [], message: 'No new offers' };
+        }
+      }
+
       console.log('✅ Offers fetched successfully:', data);
       if (params?.page === 1) {
         this.setCachedData(cacheKey, data);

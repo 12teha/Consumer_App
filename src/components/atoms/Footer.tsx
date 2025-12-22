@@ -9,7 +9,7 @@ interface FooterProps {
 const Footer = ({ onNavigate }: FooterProps) => {
   const [showContactPopup, setShowContactPopup] = useState(false);
   return (
-    <footer className="text-white-100 pt-8 pb-24 mt-8 w-full" style={{
+    <footer className="text-white-100 pt-8 pb-4 mt-8 w-full" style={{
       background: "linear-gradient(to right,rgb(173, 7, 148),rgb(90, 118, 230),rgb(51, 61, 239))",
       borderRadius: "10px",
       paddingTop: "20px"
